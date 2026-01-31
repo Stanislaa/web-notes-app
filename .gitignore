@@ -1,4 +1,27 @@
-.venv
-venv
-.md
-__pycache__
+# Виртуальное окружение
+.venv/
+venv/
+env/
+
+# Python
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Базы данных
+*.sqlite3
+
+# Секреты
+.env
+config.py
+secrets.txt
+
+# OS
+.DS_Store
+Thumbs.db
