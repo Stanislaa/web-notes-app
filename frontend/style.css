@@ -1,0 +1,170 @@
+* {
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #141616;
+  color: #eaeaea;
+}
+
+.app {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  width: 280px;
+  background: #1b1e1f;
+  border-right: 1px solid #2a2d2e;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+}
+
+.sidebar_top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.sidebar h2 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.new_note_btn {
+  background: #f5c518;
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.notes_list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.note_item {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #202324;
+  cursor: pointer;
+}
+
+.note_item:hover {
+  background: #2a2d2e;
+}
+
+.note_item.active {
+  background: #f5c518;
+  color: #000;
+}
+
+.sidebar_link {
+  margin-top: auto;
+  color: #9a9a9a;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.toolbar {
+  height: 48px;
+  background: #1b1e1f;
+  border-bottom: 1px solid #2a2d2e;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+}
+
+.tool_btn {
+  background: #2a2d2e;
+  border: none;
+  color: #eaeaea;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-right: 6px;
+}
+
+.danger_btn {
+  color: #ff6b6b;
+}
+
+.editor_wrap {
+  flex: 1;
+  overflow: auto;
+  padding: 32px;
+}
+
+.editor {
+  max-width: 760px;
+  margin: 0 auto;
+  background: #1c1f20;
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 0 0 1px #2a2d2e;
+}
+
+#note_title {
+  width: 100%;
+  font-size: 28px;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  color: #fff;
+  outline: none;
+  margin-bottom: 20px;
+}
+
+.editor_text {
+  min-height: 260px;
+  line-height: 1.7;
+  outline: none;
+  color: #ddd;
+}
+
+.editor_text:empty:before {
+  content: attr(data-placeholder);
+  color: #777;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hidden {
+  display: none;
+}
+
+.modal_box {
+  background: #1c1f20;
+  padding: 24px;
+  border-radius: 10px;
+  width: 280px;
+}
+
+.modal_actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Заметки</title>
+  <link rel="icon" type="image/png" href="image.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="sidebar_top">
+      <h2>Заметки</h2>
+      <button id="create_btn" class="new_note_btn">＋ Новая</button>
+    </div>
+
+    <div id="notes_list" class="notes_list"></div>
+
+    <a href="trash.html" class="sidebar_link">Корзина</a>
+  </aside>
+
+  <main class="main">
+
+    <header class="toolbar">
+      <div class="toolbar_left">
+        <button class="tool_btn">B</button>
+        <button class="tool_btn">I</button>
+        <button class="tool_btn">U</button>
+      </div>
+
+      <div class="toolbar_right">
+        <button id="delete_btn" class="tool_btn danger_btn">Удалить</button>
+      </div>
+    </header>
+
+    <section class="editor_wrap">
+      <div class="editor">
+        <input id="note_title" placeholder="Название заметки">
+        <div id="note_text" class="editor_text" contenteditable="true" data-placeholder="Начните писать…"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div id="modal" class="modal hidden">
+  <div class="modal_box">
+    <p>Удалить заметку?</p>
+    <div class="modal_actions">
+      <button id="cancel_delete">Отмена</button>
+      <button id="confirm_delete" class="danger_btn">Удалить</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

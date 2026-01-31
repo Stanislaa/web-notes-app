@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Корзина</title>
+  <link rel="icon" type="image/png" href="image.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="sidebar_top">
+      <h2>Корзина</h2>
+    </div>
+
+    <div id="trash_list" class="notes_list"></div>
+
+    <a href="index.html" class="sidebar_link">← К заметкам</a>
+  </aside>
+
+  <main class="main">
+
+    <header class="toolbar">
+      <div></div>
+      <div class="toolbar_right">
+        <button id="restore_btn" class="tool_btn">Восстановить</button>
+        <button id="delete_forever_btn" class="tool_btn danger_btn">Удалить навсегда</button>
+      </div>
+    </header>
+
+    <section class="editor_wrap">
+      <div class="editor">
+        <h1 id="trash_title">Выберите заметку</h1>
+        <div id="trash_text" class="editor_text"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div id="modal" class="modal hidden">
+  <div class="modal_box">
+    <p>Удалить заметку навсегда?</p>
+    <div class="modal_actions">
+      <button id="cancel_delete">Отмена</button>
+      <button id="confirm_delete" class="danger_btn">Удалить</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
