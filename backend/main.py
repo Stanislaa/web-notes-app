@@ -59,6 +59,7 @@ async def custom_404_handler(request: Request, exc: StarletteHTTPException):
 
 @app.get("/")
 @app.get("/index")
+@app.get("/index.html")
 async def index():
     return FileResponse("../frontend/index.html")
 
