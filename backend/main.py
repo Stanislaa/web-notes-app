@@ -22,17 +22,20 @@ async def custom_404_handler(request: Request, exc: StarletteHTTPException):
 
 
 note2 = NoteBase(
-    created_date=datetime(2026, 1, 29, 17, 21, 0),
-    change_date=datetime(2026, 1, 30, 15, 51, 55),
-    headline="Заметка1",
-    text="Текст заметки номер 1. Бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла"
+        created_date=datetime.now(),
+        # change_date=datetime(2026, 1, 30, 15, 51, 55),
+        headline="Заметка1",
+        text="Текст заметки номер 1. Бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла",
+        improtance=1
 )
 
+# подключение к базе данных
+# async def index(db: Session = Depends(get_db)): # type: ignore
+#     return FileResponse("../frontend/index.html")
 
 @app.get("/")
 @app.get("/index")
-async def index(db: Session = Depends(get_db)): # type: ignore
-    create_note(note2, db)
+async def index():
     return FileResponse("../frontend/index.html")
 
 @app.get("/style.css")
