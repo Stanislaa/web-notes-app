@@ -231,14 +231,16 @@ async def trash_notes_batch(batch: BatchIds, db: Session = Depends(get_db)):
     return {"trashed": trashed_count}
 
 
-@app.delete("/trash/batch", status_code=status.HTTP_204_NO_CONTENT)
+@app.post("/trash/delete-batch")
 async def delete_trash_batch(batch: BatchIds, db: Session = Depends(get_db)):
+    deleted_count = 0
     for trash_id in batch.ids:
         trashed = db.query(TrashedNote).filter(TrashedNote.id == trash_id).first()
         if trashed:
             delete_from_trash(trash_id, db)
+            deleted_count += 1
     db.commit()
-    return None
+    return {"deleted": deleted_count}
 
 
 @app.delete("/trash/all", status_code=status.HTTP_204_NO_CONTENT)

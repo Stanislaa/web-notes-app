@@ -312,8 +312,8 @@ async function confirmBatchTrashDelete() {
   var ids = Array.from(selectedNotes);
 
   try {
-    var response = await fetch('/trash/batch', {
-      method: 'DELETE',
+    var response = await fetch('/trash/delete-batch', {
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ids: ids })
     });
