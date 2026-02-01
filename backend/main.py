@@ -11,8 +11,8 @@ from sql import (
 from models.models import NoteBase, TrashedNote
 
 from pydantic import BaseModel, Field
-from datetime import datetime
-from typing import Optional
+from datetime import datetime, timezone
+from typing import Optional, List
 
 
 class NoteCreate(BaseModel):
@@ -27,6 +27,10 @@ class NoteUpdate(BaseModel):
     text: Optional[str] = Field(None, max_length=10000)
     improtance: Optional[int] = Field(None, ge=1, le=3)
     is_pinned: Optional[bool] = Field(None)
+
+
+class BatchIds(BaseModel):
+    ids: List[int]
 
 
 class NoteResponse(BaseModel):
@@ -58,9 +62,10 @@ class TrashedNoteResponse(BaseModel):
 
 app = FastAPI(title="Notes API", version="1.0.0")
 
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["sysinfo.ro", "46.173.28.153"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -118,7 +123,7 @@ async def create(note: NoteCreate, db: Session = Depends(get_db)):
         text=note.text,
         improtance=note.improtance,
         is_pinned=note.is_pinned,
-        created_date=datetime.now()
+        created_date=datetime.now(timezone.utc)
     )
     created_note = create_note(db_note, session=db)
     return created_note
@@ -130,7 +135,7 @@ async def update(note_id: int, note_update: NoteUpdate, db: Session = Depends(ge
     if not existing_note:
         raise HTTPException(status_code=404, detail="Заметка не найдена")
 
-    new_data = {"change_date": datetime.now()}
+    new_data = {"change_date": datetime.now(timezone.utc)}
 
     if note_update.headline is not None:
         new_data["new_headline"] = note_update.headline
@@ -212,3 +217,46 @@ async def delete_trash(trash_id: int, db: Session = Depends(get_db)):
     delete_from_trash(trash_id, db)
     db.commit()
     return None
+
+
+@app.post("/notes/trash-batch")
+async def trash_notes_batch(batch: BatchIds, db: Session = Depends(get_db)):
+    trashed_count = 0
+    for note_id in batch.ids:
+        existing_note = db.query(NoteBase).filter(NoteBase.id == note_id).first()
+        if existing_note:
+            move_to_trash(note_id, db)
+            trashed_count += 1
+    db.commit()
+    return {"trashed": trashed_count}
+
+
+@app.delete("/trash/batch", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_trash_batch(batch: BatchIds, db: Session = Depends(get_db)):
+    for trash_id in batch.ids:
+        trashed = db.query(TrashedNote).filter(TrashedNote.id == trash_id).first()
+        if trashed:
+            delete_from_trash(trash_id, db)
+    db.commit()
+    return None
+
+
+@app.delete("/trash/all", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_all_trash(db: Session = Depends(get_db)):
+    all_trashed = db.query(TrashedNote).all()
+    for trashed in all_trashed:
+        delete_from_trash(trashed.id, db)
+    db.commit()
+    return None
+
+
+@app.post("/trash/restore-batch")
+async def restore_trash_batch(batch: BatchIds, db: Session = Depends(get_db)):
+    restored_count = 0
+    for trash_id in batch.ids:
+        trashed = db.query(TrashedNote).filter(TrashedNote.id == trash_id).first()
+        if trashed:
+            restore_from_trash(trash_id, db)
+            restored_count += 1
+    db.commit()
+    return {"restored": restored_count}

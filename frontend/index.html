@@ -50,6 +50,22 @@
         Новая заметка
         <span class="shortcut">Ctrl+Q</span>
       </button>
+
+      <button class="btn_select" id="btn_select_mode" onclick="enterSelectionMode()">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+        Выбрать
+      </button>
+    </div>
+
+    <div class="selection_bar" id="selection_bar" style="display: none;">
+      <span>Выбрано: <strong id="selected_count">0</strong></span>
+      <div class="selection_actions">
+        <button class="btn_small" onclick="selectAllNotesForDelete()">Выбрать все</button>
+        <button class="btn_small btn_danger" onclick="deleteSelectedNotes()">Удалить выбранные</button>
+        <button class="btn_small" onclick="exitSelectionMode()">Отмена</button>
+      </div>
     </div>
 
     <div class="notes_container">

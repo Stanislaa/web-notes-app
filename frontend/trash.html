@@ -23,6 +23,20 @@
           </svg>
         </button>
       </div>
+
+      <div class="trash_actions">
+        <button class="btn_small" id="btn_select_trash" onclick="enterTrashSelectionMode()">Выбрать</button>
+        <button class="btn_small btn_danger" id="btn_clear_trash" onclick="confirmClearTrash()">Очистить всё</button>
+      </div>
+
+      <div class="selection_bar" id="selection_bar" style="display: none;">
+        <span>Выбрано: <strong id="selected_count">0</strong></span>
+        <div class="selection_actions">
+          <button class="btn_small" onclick="restoreSelectedTrash()">Восстановить</button>
+          <button class="btn_small btn_danger" onclick="deleteSelectedTrash()">Удалить</button>
+          <button class="btn_small" onclick="exitSelectionMode()">Отмена</button>
+        </div>
+      </div>
     </div>
 
     <div class="notes_container">
@@ -101,6 +115,22 @@
     <div class="modal_actions">
       <button class="btn_cancel" id="btn_cancel_delete">Отмена</button>
       <button class="btn_confirm_delete" id="btn_confirm_delete">Удалить</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal_overlay" id="modal_clear">
+  <div class="modal">
+    <div class="modal_icon">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+      </svg>
+    </div>
+    <h3>Очистить корзину?</h3>
+    <p>Все заметки будут удалены безвозвратно. Это действие нельзя отменить.</p>
+    <div class="modal_actions">
+      <button class="btn_cancel" onclick="document.getElementById('modal_clear').classList.remove('active')">Отмена</button>
+      <button class="btn_confirm_delete" onclick="deleteAllTrash(); document.getElementById('modal_clear').classList.remove('active')">Очистить</button>
     </div>
   </div>
 </div>
@@ -191,6 +221,97 @@ window.renderTrashList = function() {
 };
 
 loadTrash();
+
+var selectionMode = false;
+var selectedNotes = new Set();
+
+function enterTrashSelectionMode() {
+  selectionMode = true;
+  selectedNotes.clear();
+  document.body.classList.add('selection-mode');
+  renderTrashList();
+  updateSelectionUI();
+}
+
+function exitSelectionMode() {
+  selectionMode = false;
+  selectedNotes.clear();
+  document.body.classList.remove('selection-mode');
+  renderTrashList();
+  updateSelectionUI();
+}
+
+function toggleNoteSelection(id, e) {
+  if (e) e.stopPropagation();
+  if (selectedNotes.has(id)) {
+    selectedNotes.delete(id);
+  } else {
+    selectedNotes.add(id);
+  }
+  renderTrashList();
+  updateSelectionUI();
+}
+
+function updateSelectionUI() {
+  var selectionBar = document.getElementById('selection_bar');
+  var selectedCount = document.getElementById('selected_count');
+  if (selectionBar) {
+    if (selectionMode) {
+      selectionBar.style.display = 'flex';
+      selectedCount.textContent = selectedNotes.size;
+    } else {
+      selectionBar.style.display = 'none';
+    }
+  }
+}
+
+function confirmClearTrash() {
+  if (trashedNotes.length === 0) {
+    showToast('Корзина пуста', 'error');
+    return;
+  }
+  document.getElementById('modal_clear').classList.add('active');
+}
+
+window.renderTrashList = function() {
+  var trashList = document.getElementById('trash_list');
+  if (trashedNotes.length === 0) {
+    trashList.innerHTML = '<div class="empty_state" style="display: flex;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7"/></svg><p>Корзина пуста</p></div>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < trashedNotes.length; i++) {
+    var note = trashedNotes[i];
+    var isActive = currentNote && currentNote.id === note.id;
+    var isSelected = selectedNotes.has(note.id);
+    var importance = note.improtance || 1;
+    var title = escapeHtml(note.headline) || 'Без названия';
+    var preview = getPreview(note.text);
+    var date = formatDate(note.deleted_date);
+
+    html += '<div class="note_item ' + (isActive ? 'active' : '') + (isSelected ? ' selected' : '') + '" ';
+    html += 'data-id="' + note.id + '" ';
+    html += 'data-importance="' + importance + '" ';
+    if (selectionMode) {
+      html += 'onclick="toggleNoteSelection(' + note.id + ', event)">';
+      html += '<div class="note_checkbox' + (isSelected ? ' checked' : '') + '"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></div>';
+    } else {
+      html += 'onclick="selectTrashNote(' + note.id + ')">';
+    }
+    html += '<div class="note_item_title">' + title + '</div>';
+    html += '<div class="note_item_preview">' + preview + '</div>';
+    html += '<div class="note_item_meta">';
+    html += '<span class="note_item_date">Удалено ' + date + '</span>';
+    html += '</div>';
+    html += '</div>';
+  }
+  trashList.innerHTML = html;
+};
+
+window.toggleNoteSelection = toggleNoteSelection;
+window.enterTrashSelectionMode = enterTrashSelectionMode;
+window.exitSelectionMode = exitSelectionMode;
+window.confirmClearTrash = confirmClearTrash;
 </script>
 </body>
 </html>

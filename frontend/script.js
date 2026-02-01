@@ -5,6 +5,8 @@ var saveTimeout = null;
 var currentSort = 'date_desc';
 var currentTheme = 'dark';
 var selectedNotesForExport = new Set();
+var selectionMode = false;
+var selectedNotes = new Set();
 
 var notesList = document.getElementById('notes_list');
 var emptyState = document.getElementById('empty_state');
@@ -313,33 +315,42 @@ function setupEventListeners() {
 
   document.addEventListener('keydown', function(e) {
     if (e.ctrlKey || e.metaKey) {
-      if (e.key === 'b') {
+      // Use e.code for layout-independent shortcuts
+      if (e.code === 'KeyB') {
         e.preventDefault();
         document.execCommand('bold');
       }
-      if (e.key === 'i') {
+      if (e.code === 'KeyI') {
         e.preventDefault();
         document.execCommand('italic');
       }
-      if (e.key === 'u') {
+      if (e.code === 'KeyU') {
         e.preventDefault();
         document.execCommand('underline');
       }
-      if (e.key === 's') {
+      if (e.code === 'KeyS') {
         e.preventDefault();
         if (currentNote) {
           saveCurrentNote();
           showToast('Сохранено', 'success');
         }
       }
-      if (e.key === 'q') {
+      if (e.code === 'KeyQ') {
         e.preventDefault();
         createNewNote();
       }
-      if (e.key === 'p' && currentNote) {
+      if (e.code === 'KeyP' && currentNote) {
         e.preventDefault();
         togglePinNote();
       }
+      if (e.code === 'KeyA' && selectionMode) {
+        e.preventDefault();
+        selectAllNotesForDelete();
+      }
+    }
+    // Escape to exit selection mode
+    if (e.key === 'Escape' && selectionMode) {
+      exitSelectionMode();
     }
   });
 }
@@ -619,16 +630,23 @@ function renderNotesList(searchQuery) {
   for (var i = 0; i < filteredNotes.length; i++) {
     var note = filteredNotes[i];
     var isActive = currentNote && currentNote.id === note.id;
+    var isSelected = selectedNotes.has(note.id);
     var importance = note.improtance || 1;
     var title = escapeHtml(note.headline) || 'Без названия';
     var preview = getPreview(note.text);
     var date = formatDate(note.change_date || note.created_date);
     var label = getImportanceLabel(importance);
 
-    html += '<div class="note_item ' + (isActive ? 'active' : '') + (note.is_pinned ? ' pinned' : '') + '" ';
+    html += '<div class="note_item ' + (isActive ? 'active' : '') + (note.is_pinned ? ' pinned' : '') + (isSelected ? ' selected' : '') + '" ';
     html += 'data-id="' + note.id + '" ';
     html += 'data-importance="' + importance + '" ';
-    html += 'onclick="selectNote(' + note.id + ')">';
+
+    if (selectionMode) {
+      html += 'onclick="toggleNoteSelection(' + note.id + ', event)">';
+      html += '<div class="note_checkbox' + (isSelected ? ' checked' : '') + '"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></div>';
+    } else {
+      html += 'onclick="selectNote(' + note.id + ')">';
+    }
 
     if (note.is_pinned) {
       html += '<div class="note_pin_badge"><svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5v6l1 1 1-1v-6h5v-2l-2-2z"/></svg></div>';
@@ -1042,7 +1060,13 @@ function getPreview(html) {
 function formatDate(dateString) {
   if (!dateString) return '—';
 
-  var date = new Date(dateString);
+  // Ensure UTC parsing - if no timezone specified, treat as UTC
+  var dateStr = dateString;
+  if (!dateStr.endsWith('Z') && !dateStr.includes('+') && !dateStr.includes('-', 10)) {
+    dateStr = dateStr + 'Z';
+  }
+
+  var date = new Date(dateStr);
   var now = new Date();
   var diff = now - date;
 
@@ -1074,5 +1098,191 @@ function getImportanceLabel(level) {
   return 'Обычная';
 }
 
+// Selection mode functions
+function enterSelectionMode() {
+  selectionMode = true;
+  selectedNotes.clear();
+  document.body.classList.add('selection-mode');
+  renderNotesList(searchInput ? searchInput.value : '');
+  updateSelectionUI();
+}
+
+function exitSelectionMode() {
+  selectionMode = false;
+  selectedNotes.clear();
+  document.body.classList.remove('selection-mode');
+  renderNotesList(searchInput ? searchInput.value : '');
+  updateSelectionUI();
+}
+
+function toggleNoteSelection(id, e) {
+  if (e) e.stopPropagation();
+
+  if (selectedNotes.has(id)) {
+    selectedNotes.delete(id);
+  } else {
+    selectedNotes.add(id);
+  }
+
+  renderNotesList(searchInput ? searchInput.value : '');
+  updateSelectionUI();
+}
+
+function selectAllNotesForDelete() {
+  selectedNotes.clear();
+  for (var i = 0; i < notes.length; i++) {
+    selectedNotes.add(notes[i].id);
+  }
+  renderNotesList(searchInput ? searchInput.value : '');
+  updateSelectionUI();
+}
+
+function updateSelectionUI() {
+  var selectionBar = document.getElementById('selection_bar');
+  var selectedCount = document.getElementById('selected_count');
+
+  if (selectionBar) {
+    if (selectionMode && selectedNotes.size > 0) {
+      selectionBar.style.display = 'flex';
+      selectedCount.textContent = selectedNotes.size;
+    } else if (selectionMode) {
+      selectionBar.style.display = 'flex';
+      selectedCount.textContent = '0';
+    } else {
+      selectionBar.style.display = 'none';
+    }
+  }
+}
+
+async function deleteSelectedNotes() {
+  if (selectedNotes.size === 0) return;
+
+  var ids = Array.from(selectedNotes);
+
+  try {
+    var response = await fetch(API_BASE + '/notes/trash-batch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: ids })
+    });
+
+    if (response.ok) {
+      notes = notes.filter(function(n) {
+        return !selectedNotes.has(n.id);
+      });
+
+      if (currentNote && selectedNotes.has(currentNote.id)) {
+        currentNote = null;
+        if (noSelection) noSelection.style.display = 'flex';
+        if (editor) editor.style.display = 'none';
+      }
+
+      exitSelectionMode();
+      showToast('Удалено заметок: ' + ids.length, 'success');
+    }
+  } catch (error) {
+    console.error('Error deleting notes:', error);
+    showToast('Ошибка удаления', 'error');
+  }
+}
+
+// Trash batch functions
+async function deleteAllTrash() {
+  if (trashedNotes.length === 0) return;
+
+  try {
+    var response = await fetch(API_BASE + '/trash/all', {
+      method: 'DELETE'
+    });
+
+    if (response.ok) {
+      trashedNotes = [];
+      currentNote = null;
+
+      if (noSelection) noSelection.style.display = 'flex';
+      if (editor) editor.style.display = 'none';
+
+      renderTrashList();
+      showToast('Корзина очищена', 'success');
+    }
+  } catch (error) {
+    console.error('Error clearing trash:', error);
+    showToast('Ошибка очистки корзины', 'error');
+  }
+}
+
+async function deleteSelectedTrash() {
+  if (selectedNotes.size === 0) return;
+
+  var ids = Array.from(selectedNotes);
+
+  try {
+    var response = await fetch(API_BASE + '/trash/batch', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: ids })
+    });
+
+    if (response.ok) {
+      trashedNotes = trashedNotes.filter(function(n) {
+        return !selectedNotes.has(n.id);
+      });
+
+      if (currentNote && selectedNotes.has(currentNote.id)) {
+        currentNote = null;
+        if (noSelection) noSelection.style.display = 'flex';
+        if (editor) editor.style.display = 'none';
+      }
+
+      exitSelectionMode();
+      renderTrashList();
+      showToast('Удалено заметок: ' + ids.length, 'success');
+    }
+  } catch (error) {
+    console.error('Error deleting trash:', error);
+    showToast('Ошибка удаления', 'error');
+  }
+}
+
+async function restoreSelectedTrash() {
+  if (selectedNotes.size === 0) return;
+
+  var ids = Array.from(selectedNotes);
+
+  try {
+    var response = await fetch(API_BASE + '/trash/restore-batch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: ids })
+    });
+
+    if (response.ok) {
+      trashedNotes = trashedNotes.filter(function(n) {
+        return !selectedNotes.has(n.id);
+      });
+
+      if (currentNote && selectedNotes.has(currentNote.id)) {
+        currentNote = null;
+        if (noSelection) noSelection.style.display = 'flex';
+        if (editor) editor.style.display = 'none';
+      }
+
+      exitSelectionMode();
+      renderTrashList();
+      showToast('Восстановлено заметок: ' + ids.length, 'success');
+    }
+  } catch (error) {
+    console.error('Error restoring trash:', error);
+    showToast('Ошибка восстановления', 'error');
+  }
+}
+
 window.selectNote = selectNote;
 window.selectTrashNote = selectTrashNote;
+window.toggleNoteSelection = toggleNoteSelection;
+window.enterSelectionMode = enterSelectionMode;
+window.exitSelectionMode = exitSelectionMode;
+window.deleteSelectedNotes = deleteSelectedNotes;
+window.deleteAllTrash = deleteAllTrash;
+window.deleteSelectedTrash = deleteSelectedTrash;
+window.restoreSelectedTrash = restoreSelectedTrash;

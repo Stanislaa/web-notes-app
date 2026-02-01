@@ -1185,3 +1185,391 @@ body[data-theme="light"] .export_item.selected {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--border-hover);
 }
+
+/* Selection mode */
+.btn_select {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.btn_select:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
+.btn_select svg {
+  width: 16px;
+  height: 16px;
+}
+
+.selection_bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  margin-top: 12px;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  font-size: 0.875rem;
+}
+
+body[data-theme="light"] .selection_bar {
+  background: rgba(26, 115, 232, 0.1);
+}
+
+.selection_actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn_small {
+  padding: 6px 12px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.btn_small:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-hover);
+}
+
+.btn_small.btn_danger {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.btn_small.btn_danger:hover {
+  background: var(--error);
+  color: white;
+}
+
+.note_checkbox {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  transition: 0.2s ease;
+}
+
+.note_checkbox svg {
+  width: 14px;
+  height: 14px;
+  color: white;
+  opacity: 0;
+}
+
+.note_checkbox.checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.note_checkbox.checked svg {
+  opacity: 1;
+}
+
+.note_item.selected {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: var(--accent);
+}
+
+body[data-theme="light"] .note_item.selected {
+  background: rgba(26, 115, 232, 0.1);
+}
+
+.selection-mode .note_item {
+  display: flex;
+  align-items: flex-start;
+}
+
+.selection-mode .note_item_title,
+.selection-mode .note_item_preview,
+.selection-mode .note_item_meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.trash_actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.trash_actions .btn_small {
+  flex: 1;
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+  .app {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    min-width: 100%;
+    height: auto;
+    max-height: 50vh;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .sidebar_header {
+    padding: 12px 16px;
+  }
+
+  .sidebar_header h1 {
+    font-size: 1.125rem;
+  }
+
+  .search_box input {
+    padding: 8px 12px 8px 36px;
+    font-size: 0.8125rem;
+  }
+
+  .sort_box {
+    margin-top: 8px;
+  }
+
+  .btn_new {
+    padding: 10px;
+    font-size: 0.8125rem;
+  }
+
+  .btn_new .shortcut {
+    display: none;
+  }
+
+  .notes_container {
+    padding: 8px;
+    max-height: 200px;
+  }
+
+  .note_item {
+    padding: 10px 12px;
+  }
+
+  .note_item_title {
+    font-size: 0.875rem;
+  }
+
+  .note_item_preview {
+    font-size: 0.75rem;
+  }
+
+  .note_item_meta {
+    font-size: 0.6875rem;
+  }
+
+  .sidebar_footer {
+    padding: 12px 16px;
+  }
+
+  .main {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .toolbar {
+    padding: 8px 12px;
+    min-height: 50px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .toolbar_group {
+    gap: 4px;
+  }
+
+  .btn_tool {
+    width: 32px;
+    height: 32px;
+  }
+
+  .btn_tool svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .importance_btn {
+    width: 24px;
+    height: 24px;
+    font-size: 0.6875rem;
+  }
+
+  .btn_delete {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+
+  .btn_delete span {
+    display: none;
+  }
+
+  .toolbar_divider {
+    height: 20px;
+    margin: 0 4px;
+  }
+
+  .editor_container {
+    padding: 16px;
+  }
+
+  .editor_title {
+    font-size: 1.5rem;
+  }
+
+  .editor_meta {
+    flex-direction: column;
+    gap: 8px;
+    font-size: 0.75rem;
+  }
+
+  .editor_content {
+    min-height: 200px;
+    font-size: 0.9375rem;
+  }
+
+  .no_selection svg {
+    width: 60px;
+    height: 60px;
+  }
+
+  .no_selection h2 {
+    font-size: 1rem;
+  }
+
+  .no_selection p {
+    font-size: 0.8125rem;
+  }
+
+  .modal {
+    width: 95%;
+    padding: 20px;
+  }
+
+  .modal h3 {
+    font-size: 1rem;
+  }
+
+  .modal p {
+    font-size: 0.8125rem;
+  }
+
+  .modal_actions button {
+    padding: 10px;
+    font-size: 0.8125rem;
+  }
+
+  .toast_container {
+    bottom: 12px;
+    right: 12px;
+    left: 12px;
+  }
+
+  .toast {
+    padding: 12px 14px;
+  }
+
+  .toast span {
+    font-size: 0.8125rem;
+  }
+
+  .selection_bar {
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .selection_actions {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .btn_small {
+    padding: 8px 10px;
+    font-size: 0.6875rem;
+  }
+
+  .btn_select {
+    padding: 8px;
+    font-size: 0.8125rem;
+  }
+
+  .modal_export {
+    max-height: 90vh;
+  }
+
+  .export_notes_list {
+    max-height: 200px;
+  }
+
+  .export_actions {
+    flex-direction: column;
+  }
+
+  .btn_export_action {
+    flex-direction: row;
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .btn_export_action svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    max-height: 45vh;
+  }
+
+  .sidebar_header {
+    padding: 10px 12px;
+  }
+
+  .notes_container {
+    max-height: 150px;
+  }
+
+  .toolbar {
+    padding: 6px 10px;
+  }
+
+  .editor_container {
+    padding: 12px;
+  }
+
+  .editor_title {
+    font-size: 1.25rem;
+  }
+
+  .trash_actions {
+    flex-direction: column;
+  }
+}
