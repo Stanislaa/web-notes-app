@@ -1,4 +1,3 @@
-# main.py
 from fastapi import FastAPI, Request, Depends
 from fastapi.responses import FileResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
