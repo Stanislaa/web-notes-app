@@ -1,11 +1,14 @@
 from fastapi import FastAPI, Request, Depends, HTTPException, status
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from sqlalchemy.orm import Session
 
-from sql import Session as SessionLocal, create_note, change_note, delete_note
-from models.models import NoteBase
+from sql import (
+    Session as SessionLocal, create_note, change_note, delete_note,
+    move_to_trash, get_all_trashed, restore_from_trash, delete_from_trash
+)
+from models.models import NoteBase, TrashedNote
 
 from pydantic import BaseModel, Field
 from datetime import datetime
@@ -36,6 +39,20 @@ class NoteResponse(BaseModel):
         from_attributes = True
 
 
+class TrashedNoteResponse(BaseModel):
+    id: int
+    original_id: int
+    headline: Optional[str]
+    text: Optional[str]
+    improtance: int
+    created_date: datetime
+    change_date: Optional[datetime]
+    deleted_date: datetime
+
+    class Config:
+        from_attributes = True
+
+
 app = FastAPI(title="Notes API", version="1.0.0")
 
 app.add_middleware(
@@ -52,9 +69,16 @@ def get_db():
         yield db
 
 
-@app.exception_handler(404)
-async def custom_404_handler(request: Request, exc: StarletteHTTPException):
-    return FileResponse("../frontend/404.html")
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    if exc.status_code == 404:
+        accept = request.headers.get("accept", "")
+        if "text/html" in accept:
+            return FileResponse("../frontend/404.html", status_code=404)
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail}
+    )
 
 
 @app.get("/")
@@ -142,3 +166,43 @@ async def get_one(note_id: int, db: Session = Depends(get_db)):
     if not note:
         raise HTTPException(status_code=404, detail="Заметка не найдена")
     return note
+
+
+@app.post("/notes/{note_id}/trash", response_model=TrashedNoteResponse)
+async def trash_note(note_id: int, db: Session = Depends(get_db)):
+    existing_note = db.query(NoteBase).filter(NoteBase.id == note_id).first()
+    if not existing_note:
+        raise HTTPException(status_code=404, detail="Заметка не найдена")
+
+    trashed = move_to_trash(note_id, db)
+    db.commit()
+    db.refresh(trashed)
+    return trashed
+
+
+@app.get("/trash/", response_model=list[TrashedNoteResponse])
+async def get_all_trash(db: Session = Depends(get_db)):
+    return get_all_trashed(db)
+
+
+@app.post("/trash/{trash_id}/restore", response_model=NoteResponse)
+async def restore_note(trash_id: int, db: Session = Depends(get_db)):
+    trashed = db.query(TrashedNote).filter(TrashedNote.id == trash_id).first()
+    if not trashed:
+        raise HTTPException(status_code=404, detail="Заметка не найдена в корзине")
+
+    restored = restore_from_trash(trash_id, db)
+    db.commit()
+    db.refresh(restored)
+    return restored
+
+
+@app.delete("/trash/{trash_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_trash(trash_id: int, db: Session = Depends(get_db)):
+    trashed = db.query(TrashedNote).filter(TrashedNote.id == trash_id).first()
+    if not trashed:
+        raise HTTPException(status_code=404, detail="Заметка не найдена в корзине")
+
+    delete_from_trash(trash_id, db)
+    db.commit()
+    return None

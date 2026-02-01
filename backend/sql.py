@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Optional, List
 import os
 
-from models.models import Base, NoteBase
+from models.models import Base, NoteBase, TrashedNote
 
 os.makedirs("db", exist_ok=True)
 engine = create_engine("sqlite:///db/data.db", echo=False)
@@ -51,3 +51,51 @@ def get_all_notes(session) -> List[NoteBase]:
 
 def get_note_by_id(id: int, session) -> Optional[NoteBase]:
     return session.get(NoteBase, id)
+
+
+def move_to_trash(id: int, session) -> Optional[TrashedNote]:
+    note = session.get(NoteBase, id)
+    if note is None:
+        return None
+
+    trashed = TrashedNote(
+        original_id=note.id,
+        improtance=note.improtance,
+        headline=note.headline,
+        text=note.text,
+        created_date=note.created_date,
+        change_date=note.change_date,
+        deleted_date=datetime.now()
+    )
+    session.add(trashed)
+    session.delete(note)
+    return trashed
+
+
+def get_all_trashed(session) -> List[TrashedNote]:
+    return session.query(TrashedNote).order_by(TrashedNote.deleted_date.desc()).all()
+
+
+def restore_from_trash(id: int, session) -> Optional[NoteBase]:
+    trashed = session.get(TrashedNote, id)
+    if trashed is None:
+        return None
+
+    note = NoteBase(
+        improtance=trashed.improtance,
+        headline=trashed.headline,
+        text=trashed.text,
+        created_date=trashed.created_date,
+        change_date=datetime.now()
+    )
+    session.add(note)
+    session.delete(trashed)
+    return note
+
+
+def delete_from_trash(id: int, session) -> bool:
+    trashed = session.get(TrashedNote, id)
+    if trashed is None:
+        return False
+    session.delete(trashed)
+    return True

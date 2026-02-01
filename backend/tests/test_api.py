@@ -8,7 +8,6 @@ import os
 
 sys.path.insert(0, '..')
 
-# Меняем рабочую директорию для корректной работы FileResponse
 os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from main import app
@@ -44,8 +43,14 @@ class TestStaticRoutes:
         assert response.status_code == 200
 
 
-class TestCreateNoteEndpoint:
-    """Тесты для эндпоинта создания заметки."""
+class TestNotesAPI:
+    """Тесты для API заметок."""
+
+    def test_get_all_notes(self, client):
+        """Тест получения списка заметок."""
+        response = client.get("/notes/")
+        assert response.status_code == 200
+        assert isinstance(response.json(), list)
 
     def test_create_note_valid_data(self, client):
         """Тест создания заметки с валидными данными."""
@@ -54,10 +59,25 @@ class TestCreateNoteEndpoint:
             "text": "Текст тестовой заметки",
             "improtance": 2
         }
-        response = client.post("/create_note/", json=note_data)
-        # Примечание: текущая реализация имеет баги, поэтому может вернуть ошибку
-        # Этот тест проверяет структуру запроса
-        assert response.status_code in [200, 422, 500]
+        response = client.post("/notes/", json=note_data)
+        assert response.status_code == 201
+        data = response.json()
+        assert data["headline"] == "Тестовая заметка"
+        assert data["text"] == "Текст тестовой заметки"
+        assert data["improtance"] == 2
+        assert "id" in data
+        assert "created_date" in data
+
+    def test_create_note_minimal_data(self, client):
+        """Тест создания заметки с минимальными данными."""
+        note_data = {
+            "headline": "Минимальная заметка"
+        }
+        response = client.post("/notes/", json=note_data)
+        assert response.status_code == 201
+        data = response.json()
+        assert data["headline"] == "Минимальная заметка"
+        assert data["improtance"] == 1
 
     def test_create_note_missing_headline(self, client):
         """Тест: создание без заголовка должно вернуть ошибку валидации."""
@@ -65,7 +85,7 @@ class TestCreateNoteEndpoint:
             "text": "Текст без заголовка",
             "improtance": 1
         }
-        response = client.post("/create_note/", json=note_data)
+        response = client.post("/notes/", json=note_data)
         assert response.status_code == 422
 
     def test_create_note_empty_headline(self, client):
@@ -75,7 +95,7 @@ class TestCreateNoteEndpoint:
             "text": "Текст",
             "improtance": 1
         }
-        response = client.post("/create_note/", json=note_data)
+        response = client.post("/notes/", json=note_data)
         assert response.status_code == 422
 
     def test_create_note_headline_too_long(self, client):
@@ -85,7 +105,7 @@ class TestCreateNoteEndpoint:
             "text": "Текст",
             "improtance": 1
         }
-        response = client.post("/create_note/", json=note_data)
+        response = client.post("/notes/", json=note_data)
         assert response.status_code == 422
 
     def test_create_note_invalid_importance_low(self, client):
@@ -94,7 +114,7 @@ class TestCreateNoteEndpoint:
             "headline": "Заголовок",
             "improtance": 0
         }
-        response = client.post("/create_note/", json=note_data)
+        response = client.post("/notes/", json=note_data)
         assert response.status_code == 422
 
     def test_create_note_invalid_importance_high(self, client):
@@ -103,7 +123,7 @@ class TestCreateNoteEndpoint:
             "headline": "Заголовок",
             "improtance": 4
         }
-        response = client.post("/create_note/", json=note_data)
+        response = client.post("/notes/", json=note_data)
         assert response.status_code == 422
 
     def test_create_note_text_too_long(self, client):
@@ -113,48 +133,113 @@ class TestCreateNoteEndpoint:
             "text": "А" * 10001,
             "improtance": 1
         }
-        response = client.post("/create_note/", json=note_data)
+        response = client.post("/notes/", json=note_data)
         assert response.status_code == 422
 
-    def test_create_note_default_importance(self, client):
-        """Тест: важность по умолчанию."""
+
+class TestNoteCRUD:
+    """Тесты полного цикла CRUD для заметок."""
+
+    def test_full_crud_cycle(self, client):
+        """Тест полного цикла: создание, чтение, обновление, удаление."""
         note_data = {
-            "headline": "Заголовок без важности"
+            "headline": "CRUD тест",
+            "text": "Текст для CRUD теста",
+            "improtance": 1
         }
-        response = client.post("/create_note/", json=note_data)
-        # Проверяем, что запрос принят (валидация пройдена)
-        assert response.status_code in [200, 500]
+        create_response = client.post("/notes/", json=note_data)
+        assert create_response.status_code == 201
+        note_id = create_response.json()["id"]
 
+        get_response = client.get(f"/notes/{note_id}")
+        assert get_response.status_code == 200
+        assert get_response.json()["headline"] == "CRUD тест"
 
-class TestChangeNoteEndpoint:
-    """Тесты для эндпоинта изменения заметки."""
-
-    def test_change_note_valid_data(self, client):
-        """Тест изменения заметки с валидными данными."""
         update_data = {
-            "headline": "Новый заголовок",
-            "text": "Новый текст",
+            "headline": "Обновленный заголовок",
             "improtance": 3
         }
-        response = client.post("/change_note/", json=update_data)
-        # Текущая реализация неполная, поэтому может быть ошибка
-        assert response.status_code in [200, 422, 500]
+        update_response = client.put(f"/notes/{note_id}", json=update_data)
+        assert update_response.status_code == 200
+        assert update_response.json()["headline"] == "Обновленный заголовок"
+        assert update_response.json()["improtance"] == 3
 
-    def test_change_note_partial_update(self, client):
-        """Тест частичного обновления."""
-        update_data = {
-            "headline": "Только заголовок"
-        }
-        response = client.post("/change_note/", json=update_data)
-        assert response.status_code in [200, 500]
+        delete_response = client.delete(f"/notes/{note_id}")
+        assert delete_response.status_code == 204
 
-    def test_change_note_invalid_headline(self, client):
-        """Тест: невалидный заголовок при обновлении."""
-        update_data = {
-            "headline": "А" * 46
+        get_deleted_response = client.get(f"/notes/{note_id}")
+        assert get_deleted_response.status_code == 404
+
+    def test_get_nonexistent_note(self, client):
+        """Тест получения несуществующей заметки."""
+        response = client.get("/notes/999999")
+        assert response.status_code == 404
+
+    def test_update_nonexistent_note(self, client):
+        """Тест обновления несуществующей заметки."""
+        update_data = {"headline": "Новый заголовок"}
+        response = client.put("/notes/999999", json=update_data)
+        assert response.status_code == 404
+
+    def test_delete_nonexistent_note(self, client):
+        """Тест удаления несуществующей заметки."""
+        response = client.delete("/notes/999999")
+        assert response.status_code == 404
+
+
+class TestTrashAPI:
+    """Тесты для API корзины."""
+
+    def test_get_trash(self, client):
+        """Тест получения содержимого корзины."""
+        response = client.get("/trash/")
+        assert response.status_code == 200
+        assert isinstance(response.json(), list)
+
+    def test_move_to_trash_and_restore(self, client):
+        """Тест перемещения в корзину и восстановления."""
+        note_data = {
+            "headline": "Заметка для корзины",
+            "text": "Текст заметки",
+            "improtance": 2
         }
-        response = client.post("/change_note/", json=update_data)
-        assert response.status_code == 422
+        create_response = client.post("/notes/", json=note_data)
+        assert create_response.status_code == 201
+        note_id = create_response.json()["id"]
+
+        trash_response = client.post(f"/notes/{note_id}/trash")
+        assert trash_response.status_code == 200
+        trash_id = trash_response.json()["id"]
+
+        get_note_response = client.get(f"/notes/{note_id}")
+        assert get_note_response.status_code == 404
+
+        restore_response = client.post(f"/trash/{trash_id}/restore")
+        assert restore_response.status_code == 200
+        restored_id = restore_response.json()["id"]
+
+        get_restored_response = client.get(f"/notes/{restored_id}")
+        assert get_restored_response.status_code == 200
+
+    def test_permanent_delete_from_trash(self, client):
+        """Тест окончательного удаления из корзины."""
+        note_data = {
+            "headline": "Заметка для удаления",
+            "text": "Текст",
+            "improtance": 1
+        }
+        create_response = client.post("/notes/", json=note_data)
+        note_id = create_response.json()["id"]
+
+        trash_response = client.post(f"/notes/{note_id}/trash")
+        trash_id = trash_response.json()["id"]
+
+        delete_response = client.delete(f"/trash/{trash_id}")
+        assert delete_response.status_code == 204
+
+        get_trash_response = client.get(f"/trash/")
+        trash_ids = [item["id"] for item in get_trash_response.json()]
+        assert trash_id not in trash_ids
 
 
 class TestErrorHandling:
@@ -168,7 +253,7 @@ class TestErrorHandling:
     def test_invalid_json(self, client):
         """Тест: невалидный JSON в запросе."""
         response = client.post(
-            "/create_note/",
+            "/notes/",
             content="not valid json",
             headers={"Content-Type": "application/json"}
         )
@@ -177,7 +262,7 @@ class TestErrorHandling:
     def test_wrong_content_type(self, client):
         """Тест: неправильный Content-Type."""
         response = client.post(
-            "/create_note/",
+            "/notes/",
             content="headline=test",
             headers={"Content-Type": "application/x-www-form-urlencoded"}
         )
@@ -193,7 +278,7 @@ class TestValidationErrors:
             "headline": "",
             "improtance": 10
         }
-        response = client.post("/create_note/", json=note_data)
+        response = client.post("/notes/", json=note_data)
         assert response.status_code == 422
 
         error_detail = response.json()
@@ -207,9 +292,8 @@ class TestValidationErrors:
             "text": "А" * 10001,
             "improtance": 0
         }
-        response = client.post("/create_note/", json=note_data)
+        response = client.post("/notes/", json=note_data)
         assert response.status_code == 422
 
         error_detail = response.json()
-        # Должно быть несколько ошибок
         assert len(error_detail["detail"]) >= 2
