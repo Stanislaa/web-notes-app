@@ -15,7 +15,14 @@
 <div class="app">
   <aside class="sidebar">
     <div class="sidebar_header">
-      <h1>Заметки</h1>
+      <div class="sidebar_top">
+        <h1>Заметки</h1>
+        <button class="btn_icon" id="theme_toggle" title="Сменить тему">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+          </svg>
+        </button>
+      </div>
 
       <div class="search_box">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -24,11 +31,24 @@
         <input type="text" id="search_input" placeholder="Поиск заметок...">
       </div>
 
+      <div class="sort_box">
+        <label for="sort_select">Сортировка:</label>
+        <select id="sort_select">
+          <option value="date_desc">По дате (новые)</option>
+          <option value="date_asc">По дате (старые)</option>
+          <option value="alpha_asc">По алфавиту (А-Я)</option>
+          <option value="alpha_desc">По алфавиту (Я-А)</option>
+          <option value="importance_desc">По важности (высокая)</option>
+          <option value="importance_asc">По важности (низкая)</option>
+        </select>
+      </div>
+
       <button class="btn_new" id="btn_new_note">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
         </svg>
         Новая заметка
+        <span class="shortcut">Ctrl+Q</span>
       </button>
     </div>
 
@@ -56,18 +76,18 @@
   <main class="main">
     <header class="toolbar" id="toolbar">
       <div class="toolbar_group">
-        <button class="btn_tool" id="btn_bold" title="Жирный">
+        <button class="btn_tool" id="btn_bold" title="Жирный (Ctrl+B)">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z"/>
           </svg>
         </button>
-        <button class="btn_tool" id="btn_italic" title="Курсив">
+        <button class="btn_tool" id="btn_italic" title="Курсив (Ctrl+I)">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 4h4m-2 0l-4 16m0 0h4"/>
           </svg>
         </button>
-        <button class="btn_tool" id="btn_underline" title="Подчёркнутый">
+        <button class="btn_tool" id="btn_underline" title="Подчёркнутый (Ctrl+U)">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v7a5 5 0 0010 0V4M5 20h14"/>
           </svg>
@@ -80,6 +100,14 @@
           <button class="importance_btn" data-level="2" title="Важная">2</button>
           <button class="importance_btn" data-level="3" title="Срочная">3</button>
         </div>
+
+        <div class="toolbar_divider"></div>
+
+        <button class="btn_tool btn_pin" id="btn_pin" title="Закрепить (Ctrl+P)">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5v6l1 1 1-1v-6h5v-2l-2-2z"/>
+          </svg>
+        </button>
       </div>
 
       <div class="toolbar_group">
@@ -89,6 +117,12 @@
         </div>
 
         <div class="toolbar_divider"></div>
+
+        <button class="btn_tool" id="btn_export" title="Экспорт">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+          </svg>
+        </button>
 
         <button class="btn_delete" id="btn_delete" title="Удалить заметку">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -105,7 +139,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
         </svg>
         <h2>Выберите заметку</h2>
-        <p>или создайте новую</p>
+        <p>или создайте новую (Ctrl+Q)</p>
       </div>
 
       <div class="editor" id="editor" style="display: none;">
@@ -132,6 +166,7 @@
   </main>
 </div>
 
+<!-- Delete Modal -->
 <div class="modal_overlay" id="modal_delete">
   <div class="modal">
     <div class="modal_icon">
@@ -144,6 +179,48 @@
     <div class="modal_actions">
       <button class="btn_cancel" id="btn_cancel_delete">Отмена</button>
       <button class="btn_confirm_delete" id="btn_confirm_delete">Удалить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal_overlay" id="modal_export">
+  <div class="modal modal_export">
+    <div class="modal_header">
+      <h3>Экспорт заметок</h3>
+      <p id="export_count">Выбрано: 0 из 0</p>
+    </div>
+
+    <div class="export_selection_controls">
+      <button class="btn_small" id="btn_select_all">Выбрать все</button>
+      <button class="btn_small" id="btn_select_none">Снять все</button>
+    </div>
+
+    <div class="export_notes_list" id="export_notes_list"></div>
+
+    <div class="export_actions">
+      <button class="btn_export_action" id="btn_export_txt">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        TXT
+      </button>
+      <button class="btn_export_action" id="btn_export_json">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+        </svg>
+        JSON
+      </button>
+      <button class="btn_export_action" id="btn_export_pdf">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+        </svg>
+        PDF
+      </button>
+    </div>
+
+    <div class="modal_footer">
+      <button class="btn_cancel" id="btn_cancel_export">Закрыть</button>
     </div>
   </div>
 </div>

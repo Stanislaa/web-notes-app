@@ -15,7 +15,14 @@
 <div class="app">
   <aside class="sidebar">
     <div class="sidebar_header">
-      <h1>Корзина</h1>
+      <div class="sidebar_top">
+        <h1>Корзина</h1>
+        <button class="btn_icon" id="theme_toggle" title="Сменить тему">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+          </svg>
+        </button>
+      </div>
     </div>
 
     <div class="notes_container">
@@ -35,7 +42,7 @@
   <main class="main">
     <header class="toolbar">
       <div class="toolbar_group">
-        <span style="color: #666; font-size: 0.875rem;">
+        <span style="color: var(--text-muted); font-size: 0.875rem;">
           Удалённые заметки можно восстановить или удалить навсегда
         </span>
       </div>
@@ -102,8 +109,30 @@
 
 <script src="script.js"></script>
 <script>
+var currentTheme = localStorage.getItem('theme') || 'dark';
+document.body.setAttribute('data-theme', currentTheme);
+
+var themeToggle = document.getElementById('theme_toggle');
+if (themeToggle) {
+  updateThemeIcon();
+  themeToggle.addEventListener('click', function() {
+    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('theme', currentTheme);
+    document.body.setAttribute('data-theme', currentTheme);
+    updateThemeIcon();
+  });
+}
+
+function updateThemeIcon() {
+  var icon = themeToggle.querySelector('svg');
+  if (currentTheme === 'light') {
+    icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>';
+  } else {
+    icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>';
+  }
+}
+
 window.selectTrashNote = function(id) {
-  var trashedNotes = JSON.parse(localStorage.getItem('trashedNotes') || '[]');
   currentNote = null;
 
   for (var i = 0; i < trashedNotes.length; i++) {
@@ -119,7 +148,7 @@ window.selectTrashNote = function(id) {
   document.getElementById('editor').style.display = 'block';
 
   document.getElementById('trash_title').textContent = currentNote.headline || 'Без названия';
-  document.getElementById('trash_text').innerHTML = currentNote.text || '<em style="color: #666;">Нет текста</em>';
+  document.getElementById('trash_text').innerHTML = currentNote.text || '<em style="color: var(--text-muted);">Нет текста</em>';
 
   var metaDeleted = document.getElementById('meta_deleted');
   if (metaDeleted) {
@@ -131,7 +160,6 @@ window.selectTrashNote = function(id) {
 
 window.renderTrashList = function() {
   var trashList = document.getElementById('trash_list');
-  var trashedNotes = JSON.parse(localStorage.getItem('trashedNotes') || '[]');
 
   if (trashedNotes.length === 0) {
     trashList.innerHTML = '<div class="empty_state" style="display: flex;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7"/></svg><p>Корзина пуста</p></div>';
@@ -162,7 +190,7 @@ window.renderTrashList = function() {
   trashList.innerHTML = html;
 };
 
-renderTrashList();
+loadTrash();
 </script>
 </body>
 </html>
