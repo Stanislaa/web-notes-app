@@ -2,58 +2,163 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Заметки</title>
   <link rel="icon" type="image/png" href="image.png">
   <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
 <div class="app">
-
+  <!-- Sidebar -->
   <aside class="sidebar">
-    <div class="sidebar_top">
-      <h2>Заметки</h2>
-      <button id="create_btn" class="new_note_btn">＋ Новая</button>
-    </div>
+    <div class="sidebar-header">
+      <h1>Заметки</h1>
 
-    <div id="notes_list" class="notes_list"></div>
-
-    <a href="trash.html" class="sidebar_link">Корзина</a>
-  </aside>
-
-  <main class="main">
-
-    <header class="toolbar">
-      <div class="toolbar_left">
-        <button class="tool_btn">B</button>
-        <button class="tool_btn">I</button>
-        <button class="tool_btn">U</button>
+      <div class="search-box">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <input type="text" id="search-input" placeholder="Поиск заметок...">
       </div>
 
-      <div class="toolbar_right">
-        <button id="delete_btn" class="tool_btn danger_btn">Удалить</button>
+      <button class="btn-new" id="btn-new-note">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Новая заметка
+      </button>
+    </div>
+
+    <div class="notes-container">
+      <div class="notes-list" id="notes-list">
+        <!-- Notes will be rendered here -->
+      </div>
+
+      <div class="empty-state" id="empty-state" style="display: none;">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+        </svg>
+        <p>Заметок пока нет</p>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <a href="trash.html" class="sidebar-link">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+        </svg>
+        Корзина
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main">
+    <!-- Toolbar -->
+    <header class="toolbar" id="toolbar">
+      <div class="toolbar-group">
+        <button class="btn-tool" id="btn-bold" title="Жирный">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z"/>
+          </svg>
+        </button>
+        <button class="btn-tool" id="btn-italic" title="Курсив">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 4h4m-2 0l-4 16m0 0h4"/>
+          </svg>
+        </button>
+        <button class="btn-tool" id="btn-underline" title="Подчёркнутый">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v7a5 5 0 0010 0V4M5 20h14"/>
+          </svg>
+        </button>
+
+        <div class="toolbar-divider"></div>
+
+        <div class="importance-selector">
+          <button class="importance-btn active" data-level="1" title="Обычная">1</button>
+          <button class="importance-btn" data-level="2" title="Важная">2</button>
+          <button class="importance-btn" data-level="3" title="Срочная">3</button>
+        </div>
+      </div>
+
+      <div class="toolbar-group">
+        <div class="status-indicator" id="status-indicator">
+          <span class="status-dot"></span>
+          <span>Сохранено</span>
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <button class="btn-delete" id="btn-delete" title="Удалить заметку">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+          Удалить
+        </button>
       </div>
     </header>
 
-    <section class="editor_wrap">
-      <div class="editor">
-        <input id="note_title" placeholder="Название заметки">
-        <div id="note_text" class="editor_text" contenteditable="true" data-placeholder="Начните писать…"></div>
+    <!-- Editor Area -->
+    <div class="editor-container" id="editor-container">
+      <!-- No selection state -->
+      <div class="no-selection" id="no-selection">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+        </svg>
+        <h2>Выберите заметку</h2>
+        <p>или создайте новую</p>
       </div>
-    </section>
 
+      <!-- Editor -->
+      <div class="editor" id="editor" style="display: none;">
+        <input type="text" class="editor-title" id="editor-title" placeholder="Заголовок" maxlength="45">
+
+        <div class="editor-meta" id="editor-meta">
+          <span id="meta-created">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            Создано: —
+          </span>
+          <span id="meta-modified">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Изменено: —
+          </span>
+        </div>
+
+        <div class="editor-content" id="editor-content" contenteditable="true" data-placeholder="Начните писать..."></div>
+      </div>
+    </div>
   </main>
 </div>
 
-<div id="modal" class="modal hidden">
-  <div class="modal_box">
-    <p>Удалить заметку?</p>
-    <div class="modal_actions">
-      <button id="cancel_delete">Отмена</button>
-      <button id="confirm_delete" class="danger_btn">Удалить</button>
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" id="modal-delete">
+  <div class="modal">
+    <div class="modal-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+      </svg>
+    </div>
+    <h3>Удалить заметку?</h3>
+    <p>Заметка будет перемещена в корзину. Вы сможете восстановить её позже.</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="btn-cancel-delete">Отмена</button>
+      <button class="btn-confirm-delete" id="btn-confirm-delete">Удалить</button>
     </div>
   </div>
 </div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toast-container"></div>
 
 <script src="script.js"></script>
 </body>

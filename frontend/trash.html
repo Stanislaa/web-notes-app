@@ -2,54 +2,173 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Корзина</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Корзина — Заметки</title>
   <link rel="icon" type="image/png" href="image.png">
   <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
 <div class="app">
-
+  <!-- Sidebar -->
   <aside class="sidebar">
-    <div class="sidebar_top">
-      <h2>Корзина</h2>
+    <div class="sidebar-header">
+      <h1>Корзина</h1>
     </div>
 
-    <div id="trash_list" class="notes_list"></div>
+    <div class="notes-container">
+      <div class="notes-list" id="trash-list">
+        <!-- Trashed notes will be rendered here -->
+      </div>
+    </div>
 
-    <a href="index.html" class="sidebar_link">← К заметкам</a>
+    <div class="sidebar-footer">
+      <a href="index.html" class="sidebar-link">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
+        </svg>
+        Назад к заметкам
+      </a>
+    </div>
   </aside>
 
+  <!-- Main Content -->
   <main class="main">
-
+    <!-- Toolbar -->
     <header class="toolbar">
-      <div></div>
-      <div class="toolbar_right">
-        <button id="restore_btn" class="tool_btn">Восстановить</button>
-        <button id="delete_forever_btn" class="tool_btn danger_btn">Удалить навсегда</button>
+      <div class="toolbar-group">
+        <span style="color: var(--text-muted); font-size: 0.875rem;">
+          Удалённые заметки можно восстановить или удалить навсегда
+        </span>
+      </div>
+
+      <div class="toolbar-group">
+        <button class="btn-tool" id="btn-restore" title="Восстановить" style="width: auto; padding: 8px 14px; gap: 6px;">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 16px; height: 16px;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          Восстановить
+        </button>
+
+        <button class="btn-delete" id="btn-delete-forever" title="Удалить навсегда">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+          Удалить навсегда
+        </button>
       </div>
     </header>
 
-    <section class="editor_wrap">
-      <div class="editor">
-        <h1 id="trash_title">Выберите заметку</h1>
-        <div id="trash_text" class="editor_text"></div>
+    <!-- Preview Area -->
+    <div class="editor-container">
+      <div class="no-selection" id="no-selection">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+        </svg>
+        <h2>Выберите заметку</h2>
+        <p>для просмотра или удаления</p>
       </div>
-    </section>
 
+      <div class="editor" id="editor" style="display: none;">
+        <h1 class="editor-title" id="trash-title" style="pointer-events: none;">Выберите заметку</h1>
+        <div class="editor-meta">
+          <span id="meta-deleted">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+            Удалено: —
+          </span>
+        </div>
+        <div class="editor-content" id="trash-text" style="pointer-events: none; user-select: text;"></div>
+      </div>
+    </div>
   </main>
 </div>
 
-<div id="modal" class="modal hidden">
-  <div class="modal_box">
-    <p>Удалить заметку навсегда?</p>
-    <div class="modal_actions">
-      <button id="cancel_delete">Отмена</button>
-      <button id="confirm_delete" class="danger_btn">Удалить</button>
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" id="modal-delete">
+  <div class="modal">
+    <div class="modal-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+      </svg>
+    </div>
+    <h3>Удалить навсегда?</h3>
+    <p>Это действие нельзя отменить. Заметка будет удалена безвозвратно.</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="btn-cancel-delete">Отмена</button>
+      <button class="btn-confirm-delete" id="btn-confirm-delete">Удалить</button>
     </div>
   </div>
 </div>
 
+<!-- Toast Container -->
+<div class="toast-container" id="toast-container"></div>
+
 <script src="script.js"></script>
+<script>
+  // Override selectTrashNote for trash page
+  window.selectTrashNote = function(id) {
+    const trashedNotes = JSON.parse(localStorage.getItem('trashedNotes') || '[]');
+    currentNote = trashedNotes.find(n => n.id === id);
+
+    if (!currentNote) return;
+
+    document.getElementById('no-selection').style.display = 'none';
+    document.getElementById('editor').style.display = 'block';
+
+    document.getElementById('trash-title').textContent = currentNote.headline || 'Без названия';
+    document.getElementById('trash-text').innerHTML = currentNote.text || '<em style="color: var(--text-muted);">Нет текста</em>';
+
+    const metaDeleted = document.getElementById('meta-deleted');
+    if (metaDeleted) {
+      metaDeleted.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+        </svg>
+        Удалено: ${formatDate(currentNote.deleted_date)}
+      `;
+    }
+
+    renderTrashList();
+  };
+
+  // Override renderTrashList for better display
+  window.renderTrashList = function() {
+    const trashList = document.getElementById('trash-list');
+    const trashedNotes = JSON.parse(localStorage.getItem('trashedNotes') || '[]');
+
+    if (trashedNotes.length === 0) {
+      trashList.innerHTML = `
+        <div class="empty-state" style="display: flex;">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7"/>
+          </svg>
+          <p>Корзина пуста</p>
+        </div>
+      `;
+      return;
+    }
+
+    trashList.innerHTML = trashedNotes.map(note => `
+      <div class="note-item ${currentNote && currentNote.id === note.id ? 'active' : ''}"
+           data-id="${note.id}"
+           data-importance="${note.improtance || 1}"
+           onclick="selectTrashNote(${note.id})">
+        <div class="note-item-title">${escapeHtml(note.headline) || 'Без названия'}</div>
+        <div class="note-item-preview">${getPreview(note.text)}</div>
+        <div class="note-item-meta">
+          <span class="note-item-date">Удалено ${formatDate(note.deleted_date)}</span>
+        </div>
+      </div>
+    `).join('');
+  };
+
+  // Initialize trash page
+  renderTrashList();
+</script>
 </body>
 </html>
