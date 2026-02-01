@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request, Depends, HTTPException, status
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from sqlalchemy.orm import Session
 
@@ -8,7 +9,8 @@ from models.models import NoteBase
 
 from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
+
 
 class NoteCreate(BaseModel):
     headline: str = Field(..., min_length=1, max_length=45)
@@ -31,7 +33,17 @@ class NoteResponse(BaseModel):
     class Config:
         from_attributes = True
 
-app = FastAPI()
+app = FastAPI(title="Notes API", version="1.0.0")
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # Dependency для получения сессии
 def get_db():
@@ -53,7 +65,18 @@ async def styles():
 
 @app.get("/script.js")
 async def js():
-    return FileResponse("../frontend/script.js")
+    return FileResponse("../frontend/script.js", media_type="application/javascript")
+
+
+@app.get("/trash.html")
+async def trash():
+    return FileResponse("../frontend/trash.html")
+
+
+@app.get("/image.png")
+async def image():
+    return FileResponse("../frontend/image.png", media_type="image/png")
+
 
 # CREATE
 @app.post("/notes/", response_model=NoteResponse, status_code=status.HTTP_201_CREATED)

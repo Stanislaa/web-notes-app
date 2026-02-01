@@ -1,92 +1,74 @@
-from sqlalchemy.orm import DeclarativeBase, sessionmaker
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
-from sqlalchemy import String, create_engine, DateTime
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 import os
+import logging
 
-from models.models import *
+from models.models import Base, NoteBase
 
+# Logging setup
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# class Base(DeclarativeBase):
-#     pass
-
-
-# class NoteBase(Base):
-#     __tablename__ = "notes"
-    
-#     id: Mapped[int] = mapped_column(primary_key=True)
-#     headline: Mapped[Optional[str]] = mapped_column(String(45))
-#     text: Mapped[Optional[str]] = mapped_column(String(10000))
-#     created_date: Mapped[datetime] = mapped_column(DateTime)
-#     change_date: Mapped[Optional[datetime]] = mapped_column(DateTime)
-
-
+# Database setup
 os.makedirs("db", exist_ok=True)
 engine = create_engine("sqlite:///db/data.db", echo=False)
 Base.metadata.create_all(engine)
 
-Session = sessionmaker(engine)
+Session = sessionmaker(bind=engine)
 
 
-def create_note(note: NoteBase, session):
-    session.add(note)
-    session.commit()
-    session.refresh(note)
+def create_note(note: NoteBase, session) -> NoteBase:
+    """Create a new note in the database."""
+    try:
+        session.add(note)
+        session.commit()
+        session.refresh(note)
+        logger.info(f"Note created with id {note.id}")
+        return note
+    except Exception as e:
+        session.rollback()
+        logger.error(f"Error creating note: {e}")
+        raise
+
+
+def change_note(id: int, session, new_data: dict) -> Optional[NoteBase]:
+    """Update an existing note."""
+    note = session.get(NoteBase, id)
+    if note is None:
+        logger.warning(f"Note with id {id} not found")
+        return None
+
+    if "new_headline" in new_data:
+        note.headline = new_data["new_headline"]
+    if "text" in new_data:
+        note.text = new_data["text"]
+    if "improtance" in new_data:
+        note.improtance = new_data["improtance"]
+
+    note.change_date = datetime.now()
+    logger.info(f"Note with id {id} updated")
     return note
 
 
-def change_note(id: int, session, new_data):
+def delete_note(id: int, session) -> bool:
+    """Delete a note from the database."""
     note = session.get(NoteBase, id)
     if note is None:
-        return None
-    else:
-        note.headline = new_data.get("new_headline", note.headline)
-        note.text = new_data.get("text", note.text)
-        note.improtance = new_data.get("improtance", note.improtance)  # Добавьте эту строку
-        note.change_date = datetime.now()
-        return note
+        logger.warning(f"Note with id {id} not found")
+        return False
+
+    session.delete(note)
+    logger.info(f"Note with id {id} deleted")
+    return True
 
 
-def delete_note(id: int, session):
-    note = session.get(NoteBase, id)
-    if note is None:
-        print(f"Заметка с id {id} не найдена")
-    else:
-        session.delete(note)
-        print(f"Заметка с id {id} удалена")
+def get_all_notes(session) -> List[NoteBase]:
+    """Get all notes from the database."""
+    return session.query(NoteBase).order_by(NoteBase.created_date.desc()).all()
 
 
-
-
-# note1 = NoteBase(
-#     created_date=datetime(2026, 1, 28, 17, 15, 0),
-#     headline="Заметка1",
-#     text="Текст заметки номер 1. Бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла"
-# )
-
-# note2 = NoteBase(
-#     created_date=datetime(2026, 1, 29, 17, 22, 0),
-#     change_date=datetime(2026, 1, 30, 15, 50, 55),
-#     headline="Заметка2",
-#     text="Текст заметки номер 2. Бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла бла"
-# )
-
-# new_data = {
-#     "new_headline": "Новый заголовок для заметки",
-#     "new_text": "Новый текст заметки",
-#     "change_date": datetime(2026, 1, 31, 15, 51, 55)
-# }
-
-
-with Session() as session:
-    try:
-        # create_note(note1, session)
-        # create_note(note2, session)
-        # delete_note(2, session)
-        session.commit()
-    except Exception as e:
-        session.rollback()
-        print(f"Ошибка: {e}")
-        raise
+def get_note_by_id(id: int, session) -> Optional[NoteBase]:
+    """Get a note by its ID."""
+    return session.get(NoteBase, id)
