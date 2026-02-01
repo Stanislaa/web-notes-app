@@ -12,11 +12,10 @@ class Base(DeclarativeBase):
 
 class NoteBase(Base):
     __tablename__ = "notes"
-    
+
     id: Mapped[int] = mapped_column(primary_key=True)
-    improtance: Mapped[int] = mapped_column(Integer) #Важность. От 1 до 3. По умолчанию 1
+    improtance: Mapped[int] = mapped_column(Integer)
     headline: Mapped[Optional[str]] = mapped_column(String(45))
     text: Mapped[Optional[str]] = mapped_column(String(10000))
     created_date: Mapped[datetime] = mapped_column(DateTime)
-    change_date: Mapped[Optional[datetime]] = mapped_column(DateTime) 
-    
+    change_date: Mapped[Optional[datetime]] = mapped_column(DateTime)

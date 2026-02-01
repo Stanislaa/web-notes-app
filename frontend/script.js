@@ -1,51 +1,52 @@
-// API Base URL
-const API_URL = '';
+var notes = [];
+var trashedNotes = [];
+var currentNote = null;
+var saveTimeout = null;
 
-// State
-let notes = [];
-let trashedNotes = [];
-let currentNote = null;
-let saveTimeout = null;
+var notesList = document.getElementById('notes_list');
+var emptyState = document.getElementById('empty_state');
+var noSelection = document.getElementById('no_selection');
+var editor = document.getElementById('editor');
+var editorTitle = document.getElementById('editor_title');
+var editorContent = document.getElementById('editor_content');
+var metaCreated = document.getElementById('meta_created');
+var metaModified = document.getElementById('meta_modified');
+var searchInput = document.getElementById('search_input');
+var btnNewNote = document.getElementById('btn_new_note');
+var btnDelete = document.getElementById('btn_delete');
+var modalDelete = document.getElementById('modal_delete');
+var btnCancelDelete = document.getElementById('btn_cancel_delete');
+var btnConfirmDelete = document.getElementById('btn_confirm_delete');
+var importanceBtns = document.querySelectorAll('.importance_btn');
+var statusIndicator = document.getElementById('status_indicator');
+var toastContainer = document.getElementById('toast_container');
 
-// DOM Elements
-const notesList = document.getElementById('notes-list');
-const emptyState = document.getElementById('empty-state');
-const noSelection = document.getElementById('no-selection');
-const editor = document.getElementById('editor');
-const editorTitle = document.getElementById('editor-title');
-const editorContent = document.getElementById('editor-content');
-const metaCreated = document.getElementById('meta-created');
-const metaModified = document.getElementById('meta-modified');
-const searchInput = document.getElementById('search-input');
-const btnNewNote = document.getElementById('btn-new-note');
-const btnDelete = document.getElementById('btn-delete');
-const modalDelete = document.getElementById('modal-delete');
-const btnCancelDelete = document.getElementById('btn-cancel-delete');
-const btnConfirmDelete = document.getElementById('btn-confirm-delete');
-const importanceBtns = document.querySelectorAll('.importance-btn');
-const statusIndicator = document.getElementById('status-indicator');
-const toastContainer = document.getElementById('toast-container');
+var trashList = document.getElementById('trash_list');
+var trashTitle = document.getElementById('trash_title');
+var trashText = document.getElementById('trash_text');
+var btnRestore = document.getElementById('btn_restore');
+var btnDeleteForever = document.getElementById('btn_delete_forever');
 
-// Trash page elements
-const trashList = document.getElementById('trash-list');
-const trashTitle = document.getElementById('trash-title');
-const trashText = document.getElementById('trash-text');
-const btnRestore = document.getElementById('btn-restore');
-const btnDeleteForever = document.getElementById('btn-delete-forever');
-
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function() {
   loadNotes();
   setupEventListeners();
 });
 
-// Load notes from localStorage (will be replaced with API calls)
 function loadNotes() {
-  const saved = localStorage.getItem('notes');
-  const savedTrash = localStorage.getItem('trashedNotes');
+  var saved = localStorage.getItem('notes');
+  var savedTrash = localStorage.getItem('trashedNotes');
 
-  notes = saved ? JSON.parse(saved) : [];
-  trashedNotes = savedTrash ? JSON.parse(savedTrash) : [];
+  if (saved) {
+    notes = JSON.parse(saved);
+  } else {
+    notes = [];
+  }
+
+  if (savedTrash) {
+    trashedNotes = JSON.parse(savedTrash);
+  } else {
+    trashedNotes = [];
+  }
 
   renderNotesList();
 
@@ -54,27 +55,22 @@ function loadNotes() {
   }
 }
 
-// Save notes to localStorage
 function saveNotes() {
   localStorage.setItem('notes', JSON.stringify(notes));
   localStorage.setItem('trashedNotes', JSON.stringify(trashedNotes));
 }
 
-// Setup event listeners
 function setupEventListeners() {
-  // New note button
   if (btnNewNote) {
     btnNewNote.addEventListener('click', createNewNote);
   }
 
-  // Search
   if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
+    searchInput.addEventListener('input', function(e) {
       renderNotesList(e.target.value);
     });
   }
 
-  // Editor events
   if (editorTitle) {
     editorTitle.addEventListener('input', handleEditorChange);
   }
@@ -83,32 +79,31 @@ function setupEventListeners() {
     editorContent.addEventListener('input', handleEditorChange);
   }
 
-  // Importance buttons
-  importanceBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
+  for (var i = 0; i < importanceBtns.length; i++) {
+    importanceBtns[i].addEventListener('click', function(e) {
       if (!currentNote) return;
 
-      importanceBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+      for (var j = 0; j < importanceBtns.length; j++) {
+        importanceBtns[j].classList.remove('active');
+      }
+      e.target.classList.add('active');
 
-      currentNote.improtance = parseInt(btn.dataset.level);
+      currentNote.improtance = parseInt(e.target.dataset.level);
       saveCurrentNote();
       renderNotesList();
     });
-  });
+  }
 
-  // Delete button
   if (btnDelete) {
-    btnDelete.addEventListener('click', () => {
+    btnDelete.addEventListener('click', function() {
       if (currentNote) {
         modalDelete.classList.add('active');
       }
     });
   }
 
-  // Modal buttons
   if (btnCancelDelete) {
-    btnCancelDelete.addEventListener('click', () => {
+    btnCancelDelete.addEventListener('click', function() {
       modalDelete.classList.remove('active');
     });
   }
@@ -117,74 +112,73 @@ function setupEventListeners() {
     btnConfirmDelete.addEventListener('click', deleteCurrentNote);
   }
 
-  // Close modal on overlay click
   if (modalDelete) {
-    modalDelete.addEventListener('click', (e) => {
+    modalDelete.addEventListener('click', function(e) {
       if (e.target === modalDelete) {
         modalDelete.classList.remove('active');
       }
     });
   }
 
-  // Formatting buttons
-  const btnBold = document.getElementById('btn-bold');
-  const btnItalic = document.getElementById('btn-italic');
-  const btnUnderline = document.getElementById('btn-underline');
+  var btnBold = document.getElementById('btn_bold');
+  var btnItalic = document.getElementById('btn_italic');
+  var btnUnderline = document.getElementById('btn_underline');
 
   if (btnBold) {
-    btnBold.addEventListener('click', () => document.execCommand('bold'));
+    btnBold.addEventListener('click', function() {
+      document.execCommand('bold');
+    });
   }
   if (btnItalic) {
-    btnItalic.addEventListener('click', () => document.execCommand('italic'));
+    btnItalic.addEventListener('click', function() {
+      document.execCommand('italic');
+    });
   }
   if (btnUnderline) {
-    btnUnderline.addEventListener('click', () => document.execCommand('underline'));
+    btnUnderline.addEventListener('click', function() {
+      document.execCommand('underline');
+    });
   }
 
-  // Trash page buttons
   if (btnRestore) {
     btnRestore.addEventListener('click', restoreNote);
   }
 
   if (btnDeleteForever) {
-    btnDeleteForever.addEventListener('click', () => {
+    btnDeleteForever.addEventListener('click', function() {
       if (currentNote) {
         modalDelete.classList.add('active');
       }
     });
   }
 
-  // Keyboard shortcuts
-  document.addEventListener('keydown', (e) => {
+  document.addEventListener('keydown', function(e) {
     if (e.ctrlKey || e.metaKey) {
-      switch (e.key) {
-        case 'b':
-          e.preventDefault();
-          document.execCommand('bold');
-          break;
-        case 'i':
-          e.preventDefault();
-          document.execCommand('italic');
-          break;
-        case 'u':
-          e.preventDefault();
-          document.execCommand('underline');
-          break;
-        case 's':
-          e.preventDefault();
-          if (currentNote) {
-            saveCurrentNote();
-            showToast('Сохранено', 'success');
-          }
-          break;
+      if (e.key === 'b') {
+        e.preventDefault();
+        document.execCommand('bold');
+      }
+      if (e.key === 'i') {
+        e.preventDefault();
+        document.execCommand('italic');
+      }
+      if (e.key === 'u') {
+        e.preventDefault();
+        document.execCommand('underline');
+      }
+      if (e.key === 's') {
+        e.preventDefault();
+        if (currentNote) {
+          saveCurrentNote();
+          showToast('Сохранено', 'success');
+        }
       }
     }
   });
 }
 
-// Create new note
 function createNewNote() {
-  const note = {
+  var note = {
     id: Date.now(),
     headline: '',
     text: '',
@@ -198,24 +192,32 @@ function createNewNote() {
   renderNotesList();
   selectNote(note.id);
 
-  // Focus on title
-  setTimeout(() => {
+  setTimeout(function() {
     editorTitle.focus();
   }, 100);
 }
 
-// Render notes list
-function renderNotesList(searchQuery = '') {
+function renderNotesList(searchQuery) {
   if (!notesList) return;
 
-  const filteredNotes = notes.filter(note => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      (note.headline && note.headline.toLowerCase().includes(query)) ||
-      (note.text && note.text.toLowerCase().includes(query))
-    );
-  });
+  if (!searchQuery) {
+    searchQuery = '';
+  }
+
+  var filteredNotes = [];
+  for (var i = 0; i < notes.length; i++) {
+    var note = notes[i];
+    if (searchQuery === '') {
+      filteredNotes.push(note);
+    } else {
+      var query = searchQuery.toLowerCase();
+      var headlineMatch = note.headline && note.headline.toLowerCase().indexOf(query) !== -1;
+      var textMatch = note.text && note.text.toLowerCase().indexOf(query) !== -1;
+      if (headlineMatch || textMatch) {
+        filteredNotes.push(note);
+      }
+    }
+  }
 
   if (filteredNotes.length === 0) {
     notesList.innerHTML = '';
@@ -229,93 +231,117 @@ function renderNotesList(searchQuery = '') {
     emptyState.style.display = 'none';
   }
 
-  notesList.innerHTML = filteredNotes.map(note => `
-    <div class="note-item ${currentNote && currentNote.id === note.id ? 'active' : ''}"
-         data-id="${note.id}"
-         data-importance="${note.improtance || 1}"
-         onclick="selectNote(${note.id})">
-      <div class="note-item-title">${escapeHtml(note.headline) || 'Без названия'}</div>
-      <div class="note-item-preview">${getPreview(note.text)}</div>
-      <div class="note-item-meta">
-        <span class="note-item-date">${formatDate(note.change_date || note.created_date)}</span>
-        <span class="importance-badge" data-level="${note.improtance || 1}">
-          ${getImportanceLabel(note.improtance || 1)}
-        </span>
-      </div>
-    </div>
-  `).join('');
+  var html = '';
+  for (var i = 0; i < filteredNotes.length; i++) {
+    var note = filteredNotes[i];
+    var isActive = currentNote && currentNote.id === note.id;
+    var importance = note.improtance || 1;
+    var title = escapeHtml(note.headline) || 'Без названия';
+    var preview = getPreview(note.text);
+    var date = formatDate(note.change_date || note.created_date);
+    var label = getImportanceLabel(importance);
+
+    html += '<div class="note_item ' + (isActive ? 'active' : '') + '" ';
+    html += 'data-id="' + note.id + '" ';
+    html += 'data-importance="' + importance + '" ';
+    html += 'onclick="selectNote(' + note.id + ')">';
+    html += '<div class="note_item_title">' + title + '</div>';
+    html += '<div class="note_item_preview">' + preview + '</div>';
+    html += '<div class="note_item_meta">';
+    html += '<span class="note_item_date">' + date + '</span>';
+    html += '<span class="importance_badge" data-level="' + importance + '">' + label + '</span>';
+    html += '</div>';
+    html += '</div>';
+  }
+
+  notesList.innerHTML = html;
 }
 
-// Render trash list
 function renderTrashList() {
   if (!trashList) return;
 
   if (trashedNotes.length === 0) {
-    trashList.innerHTML = '<div class="empty-state"><p>Корзина пуста</p></div>';
+    trashList.innerHTML = '<div class="empty_state"><p>Корзина пуста</p></div>';
     return;
   }
 
-  trashList.innerHTML = trashedNotes.map(note => `
-    <div class="note-item ${currentNote && currentNote.id === note.id ? 'active' : ''}"
-         data-id="${note.id}"
-         data-importance="${note.improtance || 1}"
-         onclick="selectTrashNote(${note.id})">
-      <div class="note-item-title">${escapeHtml(note.headline) || 'Без названия'}</div>
-      <div class="note-item-preview">${getPreview(note.text)}</div>
-      <div class="note-item-meta">
-        <span class="note-item-date">${formatDate(note.deleted_date)}</span>
-      </div>
-    </div>
-  `).join('');
+  var html = '';
+  for (var i = 0; i < trashedNotes.length; i++) {
+    var note = trashedNotes[i];
+    var isActive = currentNote && currentNote.id === note.id;
+    var importance = note.improtance || 1;
+    var title = escapeHtml(note.headline) || 'Без названия';
+    var preview = getPreview(note.text);
+    var date = formatDate(note.deleted_date);
+
+    html += '<div class="note_item ' + (isActive ? 'active' : '') + '" ';
+    html += 'data-id="' + note.id + '" ';
+    html += 'data-importance="' + importance + '" ';
+    html += 'onclick="selectTrashNote(' + note.id + ')">';
+    html += '<div class="note_item_title">' + title + '</div>';
+    html += '<div class="note_item_preview">' + preview + '</div>';
+    html += '<div class="note_item_meta">';
+    html += '<span class="note_item_date">' + date + '</span>';
+    html += '</div>';
+    html += '</div>';
+  }
+
+  trashList.innerHTML = html;
 }
 
-// Select note
 function selectNote(id) {
-  currentNote = notes.find(n => n.id === id);
+  currentNote = null;
+  for (var i = 0; i < notes.length; i++) {
+    if (notes[i].id === id) {
+      currentNote = notes[i];
+      break;
+    }
+  }
 
   if (!currentNote) return;
 
-  // Update UI
   if (noSelection) noSelection.style.display = 'none';
   if (editor) editor.style.display = 'block';
 
-  // Fill editor
   editorTitle.value = currentNote.headline || '';
   editorContent.innerHTML = currentNote.text || '';
 
-  // Update meta
   if (metaCreated) {
-    metaCreated.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-      </svg>
-      Создано: ${formatDate(currentNote.created_date)}
-    `;
+    metaCreated.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Создано: ' + formatDate(currentNote.created_date);
   }
 
   if (metaModified) {
-    metaModified.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-      </svg>
-      Изменено: ${currentNote.change_date ? formatDate(currentNote.change_date) : '—'}
-    `;
+    var modifiedDate = currentNote.change_date ? formatDate(currentNote.change_date) : '—';
+    metaModified.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Изменено: ' + modifiedDate;
   }
 
-  // Update importance buttons
-  importanceBtns.forEach(btn => {
-    btn.classList.toggle('active', parseInt(btn.dataset.level) === (currentNote.improtance || 1));
-  });
+  for (var i = 0; i < importanceBtns.length; i++) {
+    var btn = importanceBtns[i];
+    var level = parseInt(btn.dataset.level);
+    if (level === (currentNote.improtance || 1)) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  }
 
-  // Update notes list
-  renderNotesList(searchInput ? searchInput.value : '');
+  var searchValue = searchInput ? searchInput.value : '';
+  renderNotesList(searchValue);
 }
 
-// Select trash note
 function selectTrashNote(id) {
-  currentNote = trashedNotes.find(n => n.id === id);
+  currentNote = null;
+  for (var i = 0; i < trashedNotes.length; i++) {
+    if (trashedNotes[i].id === id) {
+      currentNote = trashedNotes[i];
+      break;
+    }
+  }
 
   if (!currentNote) return;
+
+  if (noSelection) noSelection.style.display = 'none';
+  if (editor) editor.style.display = 'block';
 
   if (trashTitle) {
     trashTitle.textContent = currentNote.headline || 'Без названия';
@@ -328,16 +354,13 @@ function selectTrashNote(id) {
   renderTrashList();
 }
 
-// Handle editor change
 function handleEditorChange() {
   if (!currentNote) return;
 
-  // Show saving status
   updateStatus('saving');
 
-  // Debounce save
   clearTimeout(saveTimeout);
-  saveTimeout = setTimeout(() => {
+  saveTimeout = setTimeout(function() {
     currentNote.headline = editorTitle.value;
     currentNote.text = editorContent.innerHTML;
     currentNote.change_date = new Date().toISOString();
@@ -347,40 +370,58 @@ function handleEditorChange() {
   }, 500);
 }
 
-// Save current note
 function saveCurrentNote() {
   if (!currentNote) return;
 
-  const index = notes.findIndex(n => n.id === currentNote.id);
-  if (index !== -1) {
-    notes[index] = { ...currentNote };
+  for (var i = 0; i < notes.length; i++) {
+    if (notes[i].id === currentNote.id) {
+      notes[i] = {
+        id: currentNote.id,
+        headline: currentNote.headline,
+        text: currentNote.text,
+        improtance: currentNote.improtance,
+        created_date: currentNote.created_date,
+        change_date: currentNote.change_date
+      };
+      break;
+    }
   }
 
   saveNotes();
-  renderNotesList(searchInput ? searchInput.value : '');
+  var searchValue = searchInput ? searchInput.value : '';
+  renderNotesList(searchValue);
 }
 
-// Delete current note
 function deleteCurrentNote() {
   if (!currentNote) return;
 
-  // Check if we're on trash page
   if (trashList) {
-    // Permanent delete
-    trashedNotes = trashedNotes.filter(n => n.id !== currentNote.id);
+    var newTrashedNotes = [];
+    for (var i = 0; i < trashedNotes.length; i++) {
+      if (trashedNotes[i].id !== currentNote.id) {
+        newTrashedNotes.push(trashedNotes[i]);
+      }
+    }
+    trashedNotes = newTrashedNotes;
     saveNotes();
     currentNote = null;
 
-    if (trashTitle) trashTitle.textContent = 'Выберите заметку';
-    if (trashText) trashText.innerHTML = '';
+    if (noSelection) noSelection.style.display = 'flex';
+    if (editor) editor.style.display = 'none';
 
     renderTrashList();
     showToast('Заметка удалена навсегда', 'success');
   } else {
-    // Move to trash
     currentNote.deleted_date = new Date().toISOString();
     trashedNotes.unshift(currentNote);
-    notes = notes.filter(n => n.id !== currentNote.id);
+
+    var newNotes = [];
+    for (var i = 0; i < notes.length; i++) {
+      if (notes[i].id !== currentNote.id) {
+        newNotes.push(notes[i]);
+      }
+    }
+    notes = newNotes;
 
     saveNotes();
     currentNote = null;
@@ -395,30 +436,35 @@ function deleteCurrentNote() {
   modalDelete.classList.remove('active');
 }
 
-// Restore note from trash
 function restoreNote() {
   if (!currentNote) return;
 
   delete currentNote.deleted_date;
   notes.unshift(currentNote);
-  trashedNotes = trashedNotes.filter(n => n.id !== currentNote.id);
+
+  var newTrashedNotes = [];
+  for (var i = 0; i < trashedNotes.length; i++) {
+    if (trashedNotes[i].id !== currentNote.id) {
+      newTrashedNotes.push(trashedNotes[i]);
+    }
+  }
+  trashedNotes = newTrashedNotes;
 
   saveNotes();
   currentNote = null;
 
-  if (trashTitle) trashTitle.textContent = 'Выберите заметку';
-  if (trashText) trashText.innerHTML = '';
+  if (noSelection) noSelection.style.display = 'flex';
+  if (editor) editor.style.display = 'none';
 
   renderTrashList();
   showToast('Заметка восстановлена', 'success');
 }
 
-// Update status indicator
 function updateStatus(status) {
   if (!statusIndicator) return;
 
-  const dot = statusIndicator.querySelector('.status-dot');
-  const text = statusIndicator.querySelector('span:last-child');
+  var dot = statusIndicator.querySelector('.status_dot');
+  var text = statusIndicator.querySelector('span:last-child');
 
   if (status === 'saving') {
     dot.classList.add('saving');
@@ -429,67 +475,76 @@ function updateStatus(status) {
   }
 }
 
-// Show toast notification
-function showToast(message, type = 'success') {
+function showToast(message, type) {
   if (!toastContainer) return;
 
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
+  if (!type) {
+    type = 'success';
+  }
 
-  const icon = type === 'success'
-    ? '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>'
-    : '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
+  var toast = document.createElement('div');
+  toast.className = 'toast ' + type;
 
-  toast.innerHTML = `${icon}<span>${message}</span>`;
+  var icon;
+  if (type === 'success') {
+    icon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+  } else {
+    icon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
+  }
+
+  toast.innerHTML = icon + '<span>' + message + '</span>';
   toastContainer.appendChild(toast);
 
-  setTimeout(() => {
+  setTimeout(function() {
     toast.style.animation = 'slideIn 0.3s ease reverse';
-    setTimeout(() => toast.remove(), 300);
+    setTimeout(function() {
+      toast.remove();
+    }, 300);
   }, 3000);
 }
 
-// Utility functions
 function escapeHtml(text) {
   if (!text) return '';
-  const div = document.createElement('div');
+  var div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
 }
 
 function getPreview(html) {
   if (!html) return 'Нет текста';
-  const div = document.createElement('div');
+  var div = document.createElement('div');
   div.innerHTML = html;
-  const text = div.textContent || div.innerText;
-  return text.length > 50 ? text.substring(0, 50) + '...' : text || 'Нет текста';
+  var text = div.textContent || div.innerText;
+  if (text.length > 50) {
+    return text.substring(0, 50) + '...';
+  }
+  if (!text) {
+    return 'Нет текста';
+  }
+  return text;
 }
 
 function formatDate(dateString) {
   if (!dateString) return '—';
 
-  const date = new Date(dateString);
-  const now = new Date();
-  const diff = now - date;
+  var date = new Date(dateString);
+  var now = new Date();
+  var diff = now - date;
 
-  // Less than 1 minute
   if (diff < 60000) {
     return 'Только что';
   }
 
-  // Less than 1 hour
   if (diff < 3600000) {
-    const mins = Math.floor(diff / 60000);
-    return `${mins} мин. назад`;
+    var mins = Math.floor(diff / 60000);
+    return mins + ' мин. назад';
   }
 
-  // Less than 24 hours
   if (diff < 86400000) {
-    const hours = Math.floor(diff / 3600000);
-    return `${hours} ч. назад`;
+    var hours = Math.floor(diff / 3600000);
+    return hours + ' ч. назад';
   }
 
-  // Same year
   if (date.getFullYear() === now.getFullYear()) {
     return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
   }
@@ -498,14 +553,11 @@ function formatDate(dateString) {
 }
 
 function getImportanceLabel(level) {
-  switch (level) {
-    case 1: return 'Обычная';
-    case 2: return 'Важная';
-    case 3: return 'Срочная';
-    default: return 'Обычная';
-  }
+  if (level === 1) return 'Обычная';
+  if (level === 2) return 'Важная';
+  if (level === 3) return 'Срочная';
+  return 'Обычная';
 }
 
-// Make functions available globally
 window.selectNote = selectNote;
 window.selectTrashNote = selectTrashNote;
