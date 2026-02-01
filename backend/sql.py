@@ -44,7 +44,7 @@ def change_note(id: int, session, new_data):
     else:
         print(f"Заметка с id {note.id} найдена, обновляем данные")
         note.headline = new_data.get("new_headline", note.headline)
-        note.text = new_data.get("new_text", note.text)
+        note.text = new_data.get("text", note.text)
         note.change_date = new_data.get("change_date", note.change_date)
         print("Данные обновлены")
 
