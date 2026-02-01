@@ -31,6 +31,8 @@ def change_note(id: int, session, new_data: dict) -> Optional[NoteBase]:
         note.text = new_data["text"]
     if "improtance" in new_data:
         note.improtance = new_data["improtance"]
+    if "is_pinned" in new_data:
+        note.is_pinned = new_data["is_pinned"]
 
     note.change_date = datetime.now()
     return note

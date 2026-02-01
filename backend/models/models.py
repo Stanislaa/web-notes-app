@@ -19,6 +19,7 @@ class NoteBase(Base):
     text: Mapped[Optional[str]] = mapped_column(String(10000))
     created_date: Mapped[datetime] = mapped_column(DateTime)
     change_date: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    is_pinned: Mapped[bool] = mapped_column(Integer, default=0)
 
 
 class TrashedNote(Base):

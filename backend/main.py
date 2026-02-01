@@ -19,12 +19,14 @@ class NoteCreate(BaseModel):
     headline: str = Field(..., min_length=1, max_length=45)
     text: Optional[str] = Field(None, max_length=10000)
     improtance: int = Field(default=1, ge=1, le=3)
+    is_pinned: bool = Field(default=False)
 
 
 class NoteUpdate(BaseModel):
     headline: Optional[str] = Field(None, max_length=45)
     text: Optional[str] = Field(None, max_length=10000)
     improtance: Optional[int] = Field(None, ge=1, le=3)
+    is_pinned: Optional[bool] = Field(None)
 
 
 class NoteResponse(BaseModel):
@@ -34,6 +36,7 @@ class NoteResponse(BaseModel):
     improtance: int
     created_date: datetime
     change_date: Optional[datetime]
+    is_pinned: bool
 
     class Config:
         from_attributes = True
@@ -114,6 +117,7 @@ async def create(note: NoteCreate, db: Session = Depends(get_db)):
         headline=note.headline,
         text=note.text,
         improtance=note.improtance,
+        is_pinned=note.is_pinned,
         created_date=datetime.now()
     )
     created_note = create_note(db_note, session=db)
@@ -134,6 +138,8 @@ async def update(note_id: int, note_update: NoteUpdate, db: Session = Depends(ge
         new_data["text"] = note_update.text
     if note_update.improtance is not None:
         new_data["improtance"] = note_update.improtance
+    if note_update.is_pinned is not None:
+        new_data["is_pinned"] = note_update.is_pinned
 
     change_note(note_id, db, new_data)
     db.commit()
