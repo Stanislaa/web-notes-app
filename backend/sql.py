@@ -40,13 +40,13 @@ def create_note(note: NoteBase, session):
 def change_note(id: int, session, new_data):
     note = session.get(NoteBase, id)
     if note is None:
-        print("Заметки с таким id не существует")
+        return None
     else:
-        print(f"Заметка с id {note.id} найдена, обновляем данные")
         note.headline = new_data.get("new_headline", note.headline)
         note.text = new_data.get("text", note.text)
-        note.change_date = new_data.get("change_date", note.change_date)
-        print("Данные обновлены")
+        note.improtance = new_data.get("improtance", note.improtance)  # Добавьте эту строку
+        note.change_date = datetime.now()
+        return note
 
 
 def delete_note(id: int, session):
