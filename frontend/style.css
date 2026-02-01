@@ -783,6 +783,10 @@ body[data-theme="light"] .importance_badge[data-level="3"] {
 }
 
 .btn_cancel {
+  width: 140px;
+  height: 50px;
+  transition: 0.2s;
+  border-radius: 10px;
   background: var(--bg-tertiary);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
@@ -791,6 +795,7 @@ body[data-theme="light"] .importance_badge[data-level="3"] {
 .btn_cancel:hover {
   background: var(--bg-hover);
   border-color: var(--border-hover);
+  background-color: #1967d2;
 }
 
 .btn_confirm_delete {
