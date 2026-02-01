@@ -1302,15 +1302,35 @@ body[data-theme="light"] .note_item.selected {
 }
 
 .selection-mode .note_item {
-  display: flex;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto auto;
+  gap: 0;
+  align-items: start;
 }
 
-.selection-mode .note_item_title,
-.selection-mode .note_item_preview,
+.selection-mode .note_checkbox {
+  grid-row: 1 / 4;
+  margin-top: 2px;
+}
+
+.selection-mode .note_item_title {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.selection-mode .note_item_preview {
+  grid-column: 2;
+  grid-row: 2;
+}
+
 .selection-mode .note_item_meta {
-  flex: 1;
-  min-width: 0;
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.selection-mode .note_pin_badge {
+  display: none;
 }
 
 .trash_actions {

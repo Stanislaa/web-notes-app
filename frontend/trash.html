@@ -32,8 +32,8 @@
       <div class="selection_bar" id="selection_bar" style="display: none;">
         <span>Выбрано: <strong id="selected_count">0</strong></span>
         <div class="selection_actions">
-          <button class="btn_small" onclick="restoreSelectedTrash()">Восстановить</button>
-          <button class="btn_small btn_danger" onclick="deleteSelectedTrash()">Удалить</button>
+          <button class="btn_small" onclick="confirmRestoreSelected()">Восстановить</button>
+          <button class="btn_small btn_danger" onclick="showBatchDeleteModal()">Удалить</button>
           <button class="btn_small" onclick="exitSelectionMode()">Отмена</button>
         </div>
       </div>
@@ -135,6 +135,22 @@
   </div>
 </div>
 
+<div class="modal_overlay" id="modal_batch_trash_delete">
+  <div class="modal">
+    <div class="modal_icon">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+      </svg>
+    </div>
+    <h3>Удалить выбранные навсегда?</h3>
+    <p id="batch_trash_delete_count">Выбранные заметки будут удалены безвозвратно.</p>
+    <div class="modal_actions">
+      <button class="btn_cancel" onclick="document.getElementById('modal_batch_trash_delete').classList.remove('active')">Отмена</button>
+      <button class="btn_confirm_delete" onclick="confirmBatchTrashDelete()">Удалить</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast_container" id="toast_container"></div>
 
 <script src="script.js"></script>
@@ -186,38 +202,6 @@ window.selectTrashNote = function(id) {
   }
 
   renderTrashList();
-};
-
-window.renderTrashList = function() {
-  var trashList = document.getElementById('trash_list');
-
-  if (trashedNotes.length === 0) {
-    trashList.innerHTML = '<div class="empty_state" style="display: flex;"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7"/></svg><p>Корзина пуста</p></div>';
-    return;
-  }
-
-  var html = '';
-  for (var i = 0; i < trashedNotes.length; i++) {
-    var note = trashedNotes[i];
-    var isActive = currentNote && currentNote.id === note.id;
-    var importance = note.improtance || 1;
-    var title = escapeHtml(note.headline) || 'Без названия';
-    var preview = getPreview(note.text);
-    var date = formatDate(note.deleted_date);
-
-    html += '<div class="note_item ' + (isActive ? 'active' : '') + '" ';
-    html += 'data-id="' + note.id + '" ';
-    html += 'data-importance="' + importance + '" ';
-    html += 'onclick="selectTrashNote(' + note.id + ')">';
-    html += '<div class="note_item_title">' + title + '</div>';
-    html += '<div class="note_item_preview">' + preview + '</div>';
-    html += '<div class="note_item_meta">';
-    html += '<span class="note_item_date">Удалено ' + date + '</span>';
-    html += '</div>';
-    html += '</div>';
-  }
-
-  trashList.innerHTML = html;
 };
 
 loadTrash();
@@ -308,10 +292,94 @@ window.renderTrashList = function() {
   trashList.innerHTML = html;
 };
 
+function showBatchDeleteModal() {
+  if (selectedNotes.size === 0) {
+    showToast('Выберите заметки', 'error');
+    return;
+  }
+  var countText = document.getElementById('batch_trash_delete_count');
+  if (countText) {
+    countText.textContent = 'Будет удалено заметок: ' + selectedNotes.size + '. Это действие нельзя отменить.';
+  }
+  document.getElementById('modal_batch_trash_delete').classList.add('active');
+}
+
+async function confirmBatchTrashDelete() {
+  document.getElementById('modal_batch_trash_delete').classList.remove('active');
+
+  if (selectedNotes.size === 0) return;
+
+  var ids = Array.from(selectedNotes);
+
+  try {
+    var response = await fetch('/trash/batch', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: ids })
+    });
+
+    if (response.ok) {
+      trashedNotes = trashedNotes.filter(function(n) {
+        return !selectedNotes.has(n.id);
+      });
+
+      if (currentNote && selectedNotes.has(currentNote.id)) {
+        currentNote = null;
+        document.getElementById('no_selection').style.display = 'flex';
+        document.getElementById('editor').style.display = 'none';
+      }
+
+      exitSelectionMode();
+      showToast('Удалено заметок: ' + ids.length, 'success');
+    }
+  } catch (error) {
+    console.error('Error deleting trash:', error);
+    showToast('Ошибка удаления', 'error');
+  }
+}
+
+async function confirmRestoreSelected() {
+  if (selectedNotes.size === 0) {
+    showToast('Выберите заметки', 'error');
+    return;
+  }
+
+  var ids = Array.from(selectedNotes);
+
+  try {
+    var response = await fetch('/trash/restore-batch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: ids })
+    });
+
+    if (response.ok) {
+      trashedNotes = trashedNotes.filter(function(n) {
+        return !selectedNotes.has(n.id);
+      });
+
+      if (currentNote && selectedNotes.has(currentNote.id)) {
+        currentNote = null;
+        document.getElementById('no_selection').style.display = 'flex';
+        document.getElementById('editor').style.display = 'none';
+      }
+
+      exitSelectionMode();
+      showToast('Восстановлено заметок: ' + ids.length, 'success');
+    }
+  } catch (error) {
+    console.error('Error restoring trash:', error);
+    showToast('Ошибка восстановления', 'error');
+  }
+}
+
 window.toggleNoteSelection = toggleNoteSelection;
 window.enterTrashSelectionMode = enterTrashSelectionMode;
 window.exitSelectionMode = exitSelectionMode;
 window.confirmClearTrash = confirmClearTrash;
+window.showBatchDeleteModal = showBatchDeleteModal;
+window.confirmBatchTrashDelete = confirmBatchTrashDelete;
+window.confirmRestoreSelected = confirmRestoreSelected;
 </script>
 </body>
 </html>

@@ -1154,7 +1154,20 @@ function updateSelectionUI() {
   }
 }
 
-async function deleteSelectedNotes() {
+function deleteSelectedNotes() {
+  if (selectedNotes.size === 0) return;
+
+  var modal = document.getElementById('modal_batch_delete');
+  var countText = document.getElementById('batch_delete_count');
+  if (countText) {
+    countText.textContent = 'Будет удалено заметок: ' + selectedNotes.size + '. Они будут перемещены в корзину.';
+  }
+  modal.classList.add('active');
+}
+
+async function confirmBatchDelete() {
+  document.getElementById('modal_batch_delete').classList.remove('active');
+
   if (selectedNotes.size === 0) return;
 
   var ids = Array.from(selectedNotes);
@@ -1283,6 +1296,8 @@ window.toggleNoteSelection = toggleNoteSelection;
 window.enterSelectionMode = enterSelectionMode;
 window.exitSelectionMode = exitSelectionMode;
 window.deleteSelectedNotes = deleteSelectedNotes;
+window.confirmBatchDelete = confirmBatchDelete;
+window.selectAllNotesForDelete = selectAllNotesForDelete;
 window.deleteAllTrash = deleteAllTrash;
 window.deleteSelectedTrash = deleteSelectedTrash;
 window.restoreSelectedTrash = restoreSelectedTrash;
