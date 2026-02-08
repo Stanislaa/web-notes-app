@@ -50,22 +50,6 @@
         Новая заметка
         <span class="shortcut">Ctrl+Q</span>
       </button>
-
-      <button class="btn_select" id="btn_select_mode" onclick="enterSelectionMode()">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-        </svg>
-        Выбрать
-      </button>
-    </div>
-
-    <div class="selection_bar" id="selection_bar" style="display: none;">
-      <span>Выбрано: <strong id="selected_count">0</strong></span>
-      <div class="selection_actions">
-        <button class="btn_small" onclick="selectAllNotesForDelete()">Выбрать все</button>
-        <button class="btn_small btn_danger" onclick="deleteSelectedNotes()">Удалить выбранные</button>
-        <button class="btn_small" onclick="exitSelectionMode()">Отмена</button>
-      </div>
     </div>
 
     <div class="notes_container">
@@ -92,38 +76,11 @@
   <main class="main">
     <header class="toolbar" id="toolbar">
       <div class="toolbar_group">
-        <button class="btn_tool" id="btn_bold" title="Жирный (Ctrl+B)">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z"/>
-          </svg>
-        </button>
-        <button class="btn_tool" id="btn_italic" title="Курсив (Ctrl+I)">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 4h4m-2 0l-4 16m0 0h4"/>
-          </svg>
-        </button>
-        <button class="btn_tool" id="btn_underline" title="Подчёркнутый (Ctrl+U)">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v7a5 5 0 0010 0V4M5 20h14"/>
-          </svg>
-        </button>
-
-        <div class="toolbar_divider"></div>
-
         <div class="importance_selector">
           <button class="importance_btn active" data-level="1" title="Обычная">1</button>
           <button class="importance_btn" data-level="2" title="Важная">2</button>
           <button class="importance_btn" data-level="3" title="Срочная">3</button>
         </div>
-
-        <div class="toolbar_divider"></div>
-
-        <button class="btn_tool btn_pin" id="btn_pin" title="Закрепить (Ctrl+P)">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5v6l1 1 1-1v-6h5v-2l-2-2z"/>
-          </svg>
-        </button>
       </div>
 
       <div class="toolbar_group">
@@ -176,13 +133,13 @@
           </span>
         </div>
 
-        <div class="editor_content" id="editor_content" contenteditable="true" data-placeholder="Начните писать..."></div>
+        <textarea class="editor_content" id="editor_content" placeholder="Начните писать..."></textarea>
       </div>
     </div>
   </main>
 </div>
 
-<!-- Delete Modal -->
+<!-- Модалка подтверждения удаления -->
 <div class="modal_overlay" id="modal_delete">
   <div class="modal">
     <div class="modal_icon">
@@ -199,24 +156,7 @@
   </div>
 </div>
 
-<!-- Batch Delete Modal -->
-<div class="modal_overlay" id="modal_batch_delete">
-  <div class="modal">
-    <div class="modal_icon">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-      </svg>
-    </div>
-    <h3>Удалить выбранные заметки?</h3>
-    <p id="batch_delete_count">Выбранные заметки будут перемещены в корзину.</p>
-    <div class="modal_actions">
-      <button class="btn_cancel" onclick="document.getElementById('modal_batch_delete').classList.remove('active')">Отмена</button>
-      <button class="btn_confirm_delete" onclick="confirmBatchDelete()">Удалить</button>
-    </div>
-  </div>
-</div>
-
-<!-- Export Modal -->
+<!-- Модалка экспорта -->
 <div class="modal_overlay" id="modal_export">
   <div class="modal modal_export">
     <div class="modal_header">
