@@ -1,10 +1,11 @@
 let notes = [];
 let trashedNotes = [];
 let currentNote = null;
-let saveTimeout = null;
+let hasUnsavedChanges = false;
 let currentSort = 'date_desc';
 let currentTheme = 'dark';
 const selectedNotesForExport = new Set();
+const DRAFTS_KEY = 'zametki_drafts';
 
 const isTrashPage = !!document.getElementById('trash_list');
 
@@ -30,6 +31,8 @@ const sortSelect = document.getElementById('sort_select');
 const themeToggle = document.getElementById('theme_toggle');
 const btnExport = document.getElementById('btn_export');
 
+const btnSave = document.getElementById('btn_save');
+
 const trashList = document.getElementById('trash_list');
 const trashTitle = document.getElementById('trash_title');
 const trashText = document.getElementById('trash_text');
@@ -37,6 +40,36 @@ const btnRestore = document.getElementById('btn_restore');
 const btnDeleteForever = document.getElementById('btn_delete_forever');
 
 const API_BASE = '';
+
+function getDrafts() {
+  try {
+    return JSON.parse(localStorage.getItem(DRAFTS_KEY)) || {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveDraft(noteId, headline, text, improtance) {
+  const drafts = getDrafts();
+  drafts[noteId] = { headline: headline, text: text, improtance: improtance };
+  localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+}
+
+function getDraft(noteId) {
+  const drafts = getDrafts();
+  return drafts[noteId] || null;
+}
+
+function deleteDraft(noteId) {
+  const drafts = getDrafts();
+  delete drafts[noteId];
+  localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+}
+
+function hasDraft(noteId) {
+  const drafts = getDrafts();
+  return !!drafts[noteId];
+}
 
 document.addEventListener('DOMContentLoaded', function() {
   loadTheme();
@@ -170,7 +203,9 @@ function setupEventListeners() {
       e.target.classList.add('active');
 
       currentNote.improtance = parseInt(e.target.dataset.level);
-      saveCurrentNote();
+      hasUnsavedChanges = true;
+      saveDraft(currentNote.id, currentNote.headline, currentNote.text, currentNote.improtance);
+      updateStatus('unsaved');
     });
   }
 
@@ -217,6 +252,15 @@ function setupEventListeners() {
       currentSort = e.target.value;
       sortNotes();
       renderNotesList(searchInput ? searchInput.value : '');
+    });
+  }
+
+  if (btnSave) {
+    btnSave.addEventListener('click', function() {
+      if (currentNote && hasUnsavedChanges) {
+        saveCurrentNote();
+        showToast('Сохранено', 'success');
+      }
     });
   }
 
@@ -274,7 +318,7 @@ function setupEventListeners() {
     if (e.ctrlKey || e.metaKey) {
       if (e.code === 'KeyS') {
         e.preventDefault();
-        if (currentNote) {
+        if (currentNote && hasUnsavedChanges) {
           saveCurrentNote();
           showToast('Сохранено', 'success');
         }
@@ -355,9 +399,13 @@ function renderNotesList(searchQuery) {
   for (let i = 0; i < filteredNotes.length; i++) {
     const note = filteredNotes[i];
     const isActive = currentNote && currentNote.id === note.id;
-    const importance = note.improtance || 1;
-    const title = escapeHtml(note.headline) || 'Без названия';
-    const preview = getPreview(note.text);
+    const draft = getDraft(note.id);
+    const isDraft = !!draft;
+    const displayHeadline = isDraft ? draft.headline : note.headline;
+    const displayText = isDraft ? draft.text : note.text;
+    const importance = isDraft ? (draft.improtance || 1) : (note.improtance || 1);
+    const title = escapeHtml(displayHeadline) || 'Без названия';
+    const preview = getPreview(displayText);
     const date = formatDate(note.change_date || note.created_date);
     const label = getImportanceLabel(importance);
 
@@ -365,7 +413,7 @@ function renderNotesList(searchQuery) {
     html += 'data-id="' + note.id + '" ';
     html += 'data-importance="' + importance + '" ';
     html += 'onclick="selectNote(' + note.id + ')">';
-    html += '<div class="note_item_title">' + title + '</div>';
+    html += '<div class="note_item_title">' + title + (isDraft ? '<span class="draft_badge">черновик</span>' : '') + '</div>';
     html += '<div class="note_item_preview">' + preview + '</div>';
     html += '<div class="note_item_meta">';
     html += '<span class="note_item_date">' + date + '</span>';
@@ -423,8 +471,21 @@ function selectNote(id) {
   if (noSelection) noSelection.style.display = 'none';
   if (editor) editor.style.display = 'flex';
 
-  editorTitle.value = currentNote.headline || '';
-  editorContent.value = currentNote.text || '';
+  const draft = getDraft(id);
+  if (draft) {
+    editorTitle.value = draft.headline || '';
+    editorContent.value = draft.text || '';
+    currentNote.headline = draft.headline;
+    currentNote.text = draft.text;
+    currentNote.improtance = draft.improtance;
+    hasUnsavedChanges = true;
+    updateStatus('unsaved');
+  } else {
+    editorTitle.value = currentNote.headline || '';
+    editorContent.value = currentNote.text || '';
+    hasUnsavedChanges = false;
+    updateStatus('saved');
+  }
 
   if (metaCreated) {
     metaCreated.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Создано: ' + formatDate(currentNote.created_date);
@@ -482,20 +543,21 @@ function selectTrashNote(id) {
 function handleEditorChange() {
   if (!currentNote) return;
 
-  updateStatus('saving');
+  hasUnsavedChanges = true;
+  currentNote.headline = editorTitle.value;
+  currentNote.text = editorContent.value;
 
-  clearTimeout(saveTimeout);
-  saveTimeout = setTimeout(function() {
-    currentNote.headline = editorTitle.value;
-    currentNote.text = editorContent.value;
+  saveDraft(currentNote.id, currentNote.headline, currentNote.text, currentNote.improtance);
+  updateStatus('unsaved');
 
-    saveCurrentNote();
-    updateStatus('saved');
-  }, 500);
+  const searchValue = searchInput ? searchInput.value : '';
+  renderNotesList(searchValue);
 }
 
 async function saveCurrentNote() {
   if (!currentNote) return;
+
+  updateStatus('saving');
 
   try {
     const response = await fetch(API_BASE + '/notes/' + currentNote.id, {
@@ -519,15 +581,21 @@ async function saveCurrentNote() {
         }
       }
 
+      deleteDraft(currentNote.id);
+      hasUnsavedChanges = false;
+
       const searchValue = searchInput ? searchInput.value : '';
       renderNotesList(searchValue);
 
       if (metaModified) {
         metaModified.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Изменено: ' + formatDate(updatedNote.change_date);
       }
+
+      updateStatus('saved');
     }
   } catch (error) {
     console.error('Error saving note:', error);
+    updateStatus('error');
     showToast('Ошибка сохранения', 'error');
   }
 }
@@ -562,6 +630,8 @@ async function deleteCurrentNote() {
       });
 
       if (response.ok) {
+        deleteDraft(currentNote.id);
+        hasUnsavedChanges = false;
         notes = notes.filter(function(n) { return n.id !== currentNote.id; });
         currentNote = null;
 
@@ -800,12 +870,28 @@ function updateStatus(status) {
   const dot = statusIndicator.querySelector('.status_dot');
   const text = statusIndicator.querySelector('span:last-child');
 
+  dot.classList.remove('saving', 'unsaved', 'error');
+
   if (status === 'saving') {
     dot.classList.add('saving');
     text.textContent = 'Сохранение...';
+  } else if (status === 'unsaved') {
+    dot.classList.add('unsaved');
+    text.textContent = 'Черновик';
+  } else if (status === 'error') {
+    dot.classList.add('error');
+    text.textContent = 'Ошибка';
   } else {
-    dot.classList.remove('saving');
     text.textContent = 'Сохранено';
+  }
+
+  if (btnSave) {
+    btnSave.disabled = status !== 'unsaved';
+  }
+
+  const btnDiscard = document.getElementById('btn_discard');
+  if (btnDiscard) {
+    btnDiscard.style.display = status === 'unsaved' ? '' : 'none';
   }
 }
 
@@ -875,5 +961,56 @@ function getImportanceLabel(level) {
   return 'Обычная';
 }
 
+async function discardDraft() {
+  if (!currentNote) return;
+
+  const noteId = currentNote.id;
+  deleteDraft(noteId);
+  hasUnsavedChanges = false;
+
+  try {
+    const response = await fetch(API_BASE + '/notes/' + noteId);
+    if (response.ok) {
+      const serverNote = await response.json();
+
+      for (let i = 0; i < notes.length; i++) {
+        if (notes[i].id === noteId) {
+          notes[i] = serverNote;
+          break;
+        }
+      }
+
+      currentNote = serverNote;
+      editorTitle.value = serverNote.headline || '';
+      editorContent.value = serverNote.text || '';
+
+      for (let i = 0; i < importanceBtns.length; i++) {
+        const btn = importanceBtns[i];
+        const level = parseInt(btn.dataset.level);
+        if (level === (serverNote.improtance || 1)) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error restoring note:', error);
+  }
+
+  updateStatus('saved');
+  const searchValue = searchInput ? searchInput.value : '';
+  renderNotesList(searchValue);
+  showToast('Черновик отменён', 'success');
+}
+
+window.addEventListener('beforeunload', function(e) {
+  if (hasUnsavedChanges) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
 window.selectNote = selectNote;
 window.selectTrashNote = selectTrashNote;
+window.discardDraft = discardDraft;

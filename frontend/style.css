@@ -850,6 +850,93 @@ div.editor_content {
   50% { opacity: 0.5; }
 }
 
+.status_dot.unsaved {
+  background: var(--importance-2);
+}
+
+.status_dot.error {
+  background: var(--error);
+}
+
+.btn_save {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--accent);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.btn_save:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.btn_save:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn_save svg {
+  width: 16px;
+  height: 16px;
+}
+
+.btn_save .shortcut {
+  font-size: 0.6875rem;
+  padding: 1px 5px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 3px;
+}
+
+.btn_discard {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.btn_discard:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
+.btn_discard svg {
+  width: 14px;
+  height: 14px;
+}
+
+.draft_badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 5px;
+  font-size: 0.625rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
+body[data-theme="light"] .draft_badge {
+  background: rgba(245, 158, 11, 0.15);
+  color: #d97706;
+}
+
 /* Export Modal */
 .modal_export {
   max-width: 500px;
@@ -1158,6 +1245,20 @@ body[data-theme="light"] .export_item.selected {
   }
 
   .btn_delete {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+
+  .btn_save {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+
+  .btn_save .shortcut {
+    display: none;
+  }
+
+  .btn_discard {
     padding: 6px 10px;
     font-size: 0.75rem;
   }

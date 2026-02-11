@@ -26,5 +26,8 @@ secrets.txt
 .DS_Store
 Thumbs.db
 
+.pptx
+
+make_presentations.py
 
 .claude

@@ -84,6 +84,23 @@
       </div>
 
       <div class="toolbar_group">
+        <button class="btn_save" id="btn_save" title="Сохранить (Ctrl+S)" disabled>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+          </svg>
+          Сохранить
+          <span class="shortcut">Ctrl+S</span>
+        </button>
+
+        <button class="btn_discard" id="btn_discard" title="Отменить изменения" onclick="discardDraft()" style="display: none;">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+          Отменить
+        </button>
+
+        <div class="toolbar_divider"></div>
+
         <div class="status_indicator" id="status_indicator">
           <span class="status_dot"></span>
           <span>Сохранено</span>
